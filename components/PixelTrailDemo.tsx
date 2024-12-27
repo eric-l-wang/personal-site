@@ -9,6 +9,7 @@ import { useRef, useEffect, useState } from "react"; // Removed useState and use
 import confetti from "canvas-confetti";
 import useSound from "use-sound";
 import { useSound as useSoundContext } from "@/contexts/SoundContext";
+import DiscoBall from "@/components/DiscoBall";
 
 const RainDrop = ({ startX, startY }: { startX: number; startY: number }) => {
   return (
@@ -53,21 +54,26 @@ const CloudRain = ({ cloudX, cloudY }: { cloudX: number; cloudY: number }) => {
   );
 };
 
-const SkyVisuals = () => {
+const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
   return (
     <div className="fixed w-full h-32 mb-4">
-      {/* Sun/Moon */}
-      <motion.div
-        className="absolute sm:left-[37%] left-[42%] -translate-x-1/2 w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD]"
-        animate={{
-          y: [0, -8, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
+      <div className="absolute sm:left-[40%] left-[50%] -translate-x-1/2">
+        {isPartyPlaying ? (
+          <DiscoBall />
+        ) : (
+          <motion.div
+            className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD]"
+            animate={{
+              y: [0, -8, 0],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        )}
+      </div>
 
       {/* Clouds */}
       <div className="relative">
@@ -224,7 +230,7 @@ const PixelTrailDemo: React.FC = () => {
       />
 
       <div className="flex-grow flex flex-col justify-start pt-20 items-center p-4 relative">
-        <SkyVisuals />
+        <SkyVisuals isPartyPlaying={isPartyPlaying} />
         <h2 className="font-VT323 text-4xl sm:text-5xl md:text-5xl uppercase text-center cursor-default pt-32 z-20">
           Eric Wang
         </h2>
