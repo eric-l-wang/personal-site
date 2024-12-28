@@ -27,7 +27,7 @@ const DiscoBall = () => {
           }
           50% {
             background-position: 100% 100%;
-            filter: brightness(1.1) saturate(1.1);
+            filter: brightness(0.92) saturate(1.1);
           }
           100% {
             background-position: 0% 0%;
