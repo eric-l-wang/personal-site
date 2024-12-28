@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import PixelTrail from "@/components/PixelTrail";
-import useScreenSize from "@/hooks/useScreenSize";
 import Float from "@/components/Float";
-import { motion } from "framer-motion"; // Removed useAnimationControls
-import { useRef, useEffect, useState } from "react"; // Removed useState and useEffect
+import { motion } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import useSound from "use-sound";
 import { useSound as useSoundContext } from "@/contexts/SoundContext";
@@ -120,7 +118,7 @@ const MusicNote = ({ startX, startY }: { startX: number; startY: number }) => {
       animate={{
         opacity: [0, 1, 0],
         y: startY - 40,
-        rotate: [0, 15, -15], // Increased rotation range
+        rotate: [0, 15, -15],
       }}
       transition={{
         duration: 2,
@@ -155,18 +153,13 @@ const NoteBurst = ({ isActive }: { isActive: boolean }) => {
   return (
     <div className="absolute -top-8 left-[60%] w-48 h-32 pointer-events-none">
       {notes.map((id) => (
-        <MusicNote
-          key={id}
-          startX={Math.random() * 60 - 30} // Wider spread (-30 to +30)
-          startY={0}
-        />
+        <MusicNote key={id} startX={Math.random() * 60 - 30} startY={0} />
       ))}
     </div>
   );
 };
 
 const PixelTrailDemo: React.FC = () => {
-  const screenSize = useScreenSize();
   const [playClick] = useSound("/Creamy Keyboard Press.mp3");
   const { isSoundEnabled, isPartyPlaying, toggleParty } = useSoundContext();
 
@@ -182,7 +175,7 @@ const PixelTrailDemo: React.FC = () => {
 
   const triggerConfetti = () => {
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-    const duration = 2 * 1000; // 3 seconds
+    const duration = 2 * 1000;
     const animationEnd = Date.now() + duration;
 
     const randomInRange = (min: number, max: number) => {
@@ -223,11 +216,6 @@ const PixelTrailDemo: React.FC = () => {
           transition: "opacity 0.3s ease",
         }}
       ></div>
-      <PixelTrail
-        pixelSize={screenSize.lessThan(`md`) ? 8 : 12}
-        fadeDuration={500}
-        pixelClassName="rounded-sm"
-      />
 
       <div className="flex-grow flex flex-col justify-start pt-20 items-center p-4 relative">
         <SkyVisuals isPartyPlaying={isPartyPlaying} />
@@ -238,7 +226,6 @@ const PixelTrailDemo: React.FC = () => {
           Founder, Engineer, Designer.
         </span>
         <div className="mt-16 p-8 flex flex-wrap justify-center items-center gap-6 relative">
-          {/* Rest of the Float components and buttons remain unchanged */}
           <Float
             speed={0.7}
             amplitude={[15, 25, 35]}
@@ -294,7 +281,6 @@ const PixelTrailDemo: React.FC = () => {
               </Link>
             </div>
           </Float>
-          {/* PARTY BUTTON! */}
           <Float
             speed={1}
             amplitude={[20, 30, 25]}
