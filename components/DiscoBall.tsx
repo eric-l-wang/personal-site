@@ -5,7 +5,13 @@ import { motion } from "framer-motion";
 const DiscoBall = () => {
   return (
     <motion.div
-      className="relative w-16 h-16"
+      className="w-16 h-16 rounded-full relative"
+      style={{
+        background:
+          "linear-gradient(-45deg, #60A5FA, #22D3EE, #F472B6, #A78BFA, #E5E7EB)",
+        backgroundSize: "200% 200%", // Increased back to make transitions smoother
+        animation: "gradientFlow 1.044s ease infinite", // Doubled from 0.522s to 1.044s
+      }}
       animate={{ y: [0, -8, 0] }}
       transition={{
         duration: 4,
@@ -13,6 +19,22 @@ const DiscoBall = () => {
         ease: "easeInOut",
       }}
     >
+      <style jsx global>{`
+        @keyframes gradientFlow {
+          0% {
+            background-position: 0% 0%;
+            filter: brightness(0.9) saturate(1);
+          }
+          50% {
+            background-position: 100% 100%;
+            filter: brightness(1.1) saturate(1.1);
+          }
+          100% {
+            background-position: 0% 0%;
+            filter: brightness(0.9) saturate(1);
+          }
+        }
+      `}</style>
       <svg
         viewBox="0 0 100 100"
         className="w-full h-full"
