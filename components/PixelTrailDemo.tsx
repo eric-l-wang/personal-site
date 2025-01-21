@@ -54,7 +54,7 @@ const CloudRain = ({ cloudX, cloudY }: { cloudX: number; cloudY: number }) => {
 
 const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
   return (
-    <div className="fixed w-full h-32 mb-4">
+    <div className="fixed w-full h-32 -z-6 top-48">
       <div className="absolute sm:left-[40%] left-[50%] -translate-x-1/2">
         {isPartyPlaying ? (
           <DiscoBall />
@@ -76,7 +76,7 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
       {/* Clouds */}
       <div className="relative">
         <motion.div
-          className="absolute top-10 sm:left-[32%] left-[35%] -translate-x-1/2 opacity-70"
+          className="absolute top-10 sm:left-[35%] left-[35%] -translate-x-1/2 opacity-70"
           animate={{
             x: [-10, 10, -10],
           }}
@@ -86,8 +86,8 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
             ease: "easeInOut",
           }}
         >
-          <div className="w-24 h-8 bg-gray-200 dark:bg-gray-600 rounded-full" />
-          <div className="w-16 h-8 bg-gray-200 dark:bg-gray-600 rounded-full -mt-4 ml-4" />
+          <div className="w-16 h-8 bg-gray-200 dark:bg-gray-600 rounded-full ml-4" />
+          <div className="w-24 h-8 bg-gray-200 dark:bg-gray-600 rounded-full -mt-4" />
           <CloudRain cloudX={55} cloudY={8} />
         </motion.div>
 
@@ -102,8 +102,8 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
             ease: "easeInOut",
           }}
         >
-          <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded-full" />
-          <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded-full -mt-3 ml-3" />
+          <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded-full ml-3" />
+          <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded-full -mt-3" />
           <CloudRain cloudX={45} cloudY={6} />
         </motion.div>
       </div>
@@ -206,26 +206,21 @@ const PixelTrailDemo: React.FC = () => {
     }, 250);
   };
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col font-azeretMono">
-      <div
-        className="fixed pointer-events-none"
-        style={{
-          top: "15%",
-          left: "35%",
-          transition: "opacity 0.3s ease",
-        }}
-      ></div>
+  const handleResumeClick = () => {
+    document.getElementById("work")?.scrollIntoView({ behavior: "smooth" });
+  };
 
-      <div className="flex-grow flex flex-col justify-start pt-20 items-center p-4 relative">
-        <SkyVisuals isPartyPlaying={isPartyPlaying} />
-        <h2 className="font-VT323 text-4xl sm:text-5xl md:text-5xl uppercase text-center cursor-default pt-32 z-20">
+  return (
+    <div className="min-h-[800px] max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
+      <SkyVisuals isPartyPlaying={isPartyPlaying} />
+      <div className="flex-grow flex flex-col justify-center -translate-y-20 items-center p-4 relative">
+        <h2 className="font-VT323 text-4xl sm:text-5xl md:text-5xl uppercase text-center cursor-default z-20">
           Eric Wang
         </h2>
-        <span className="pt-0.5 sm:pt-2 text-sm sm:text-base text-center font-bold font-mono cursor-default z-20">
+        <h3 className="pt-0.5 sm:pt-2 text-sm sm:text-base text-center font-bold font-mono cursor-default z-20 pb-12">
           Founder, Engineer, Designer.
-        </span>
-        <div className="mt-16 p-8 flex flex-wrap justify-center items-center gap-6 relative">
+        </h3>
+        <div className="mt-8 flex flex-wrap justify-center items-center gap-6 relative">
           <Float
             speed={0.7}
             amplitude={[15, 25, 35]}
@@ -233,26 +228,21 @@ const PixelTrailDemo: React.FC = () => {
             timeOffset={0}
           >
             <div className="relative hover:scale-105 transition-transform">
-              <a
-                href="/Eric Wang Resume 2024 - Final (2).pdf"
-                target="_blank"
-                rel="noopener noreferrer"
+              <motion.button
+                onClick={handleResumeClick}
+                className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.21, 1.02, 0.73, 0.97],
+                  opacity: { duration: 0.4 },
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <motion.button
-                  className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.8,
-                    ease: [0.21, 1.02, 0.73, 0.97],
-                    opacity: { duration: 0.4 },
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Resume
-                </motion.button>
-              </a>
+                Resume
+              </motion.button>
             </div>
           </Float>
           <Float
