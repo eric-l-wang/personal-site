@@ -54,58 +54,61 @@ const CloudRain = ({ cloudX, cloudY }: { cloudX: number; cloudY: number }) => {
 
 const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
   return (
-    <div className="fixed w-full h-32 -z-6 top-48">
-      <div className="absolute sm:left-[40%] left-[50%] -translate-x-1/2">
-        {isPartyPlaying ? (
-          <DiscoBall />
-        ) : (
+    <div className="fixed w-full h-32 -z-6 top-40 sm:top-48">
+      <div className="relative max-w-[500px] mx-auto">
+        {/* Sun/Moon */}
+        <div className="absolute left-[50%] -translate-x-1/2">
+          {isPartyPlaying ? (
+            <DiscoBall />
+          ) : (
+            <motion.div
+              className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD]"
+              animate={{
+                y: [0, -8, 0],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Clouds */}
+        <div className="relative">
           <motion.div
-            className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD]"
+            className="absolute top-10 left-[30%] -translate-x-1/2 opacity-70"
             animate={{
-              y: [0, -8, 0],
+              x: [-5, 5, -5],
             }}
             transition={{
-              duration: 4,
+              duration: 5,
               repeat: Infinity,
               ease: "easeInOut",
             }}
-          />
-        )}
-      </div>
+          >
+            <div className="w-16 h-8 bg-gray-200 dark:bg-gray-600 rounded-full ml-4" />
+            <div className="w-24 h-8 bg-gray-200 dark:bg-gray-600 rounded-full -mt-4" />
+            <CloudRain cloudX={55} cloudY={8} />
+          </motion.div>
 
-      {/* Clouds */}
-      <div className="relative">
-        <motion.div
-          className="absolute top-10 sm:left-[35%] left-[35%] -translate-x-1/2 opacity-70"
-          animate={{
-            x: [-10, 10, -10],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          <div className="w-16 h-8 bg-gray-200 dark:bg-gray-600 rounded-full ml-4" />
-          <div className="w-24 h-8 bg-gray-200 dark:bg-gray-600 rounded-full -mt-4" />
-          <CloudRain cloudX={55} cloudY={8} />
-        </motion.div>
-
-        <motion.div
-          className="absolute top-6 sm:left-[41%] left-[52%] -translate-x-1/2 opacity-70"
-          animate={{
-            x: [10, -10, 10],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded-full ml-3" />
-          <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded-full -mt-3" />
-          <CloudRain cloudX={45} cloudY={6} />
-        </motion.div>
+          <motion.div
+            className="absolute top-6 left-[53%] -translate-x-1/2 opacity-70"
+            animate={{
+              x: [10, -10, 10],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded-full ml-3" />
+            <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded-full -mt-3" />
+            <CloudRain cloudX={45} cloudY={6} />
+          </motion.div>
+        </div>
       </div>
     </div>
   );
