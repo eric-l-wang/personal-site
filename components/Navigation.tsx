@@ -21,7 +21,7 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="sticky top-0 w-full backdrop-blur-sm bg-white/80 dark:bg-[#0F1117]/80 z-50">
+    <nav className="sticky top-0 w-full bg-white lg:backdrop-blur-sm lg:bg-white/80 dark:bg-[#0F1117] lg:dark:bg-[#0F1117]/80 z-50">
       <div className="max-w-3xl mx-auto px-4 py-4 pt-8">
         <div className="flex justify-between items-center">
           <Link
@@ -95,8 +95,8 @@ const Navigation: React.FC = () => {
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 20 }}
-                className="fixed top-0 right-0 bottom-0 w-[75%] max-w-[300px] bg-white dark:bg-[#0F1117] shadow-xl lg:hidden flex flex-col px-6"
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed top-0 right-0 bottom-0 w-[90%] max-w-[400px] bg-white dark:bg-[#0F1117] shadow-xl lg:hidden flex flex-col px-6"
                 style={{ zIndex: 50 }}
               >
                 <div className="flex justify-end pt-8">
@@ -104,19 +104,19 @@ const Navigation: React.FC = () => {
                 </div>
                 <div className="flex flex-col space-y-6 pt-16">
                   <Link
+                    href="/"
+                    className={isActive("/")}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Home
+                  </Link>
+                  <Link
                     href="/writing"
                     className={isActive("/writing")}
                     onClick={() => setIsOpen(false)}
                   >
                     Writing
                   </Link>
-                  {/* <Link
-                    href="/work"
-                    className={isActive("/work")}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Work
-                  </Link> */}
                   <Link
                     href="/about"
                     className={isActive("/about")}
