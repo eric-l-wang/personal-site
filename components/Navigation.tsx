@@ -23,10 +23,12 @@ const Navigation: React.FC = () => {
   return (
     <nav className="sticky top-0 w-full bg-white lg:backdrop-blur-sm lg:bg-white/80 dark:bg-[#0F1117] lg:dark:bg-[#0F1117]/80 z-50">
       <div className="max-w-3xl mx-auto px-4 py-4 pt-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center relative z-50">
           <Link
             href="/"
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white transition-colors cursor-pointer p-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            className={`text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white transition-all cursor-pointer p-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 ${
+              isOpen ? 'opacity-0' : 'opacity-100'
+            }`}
           >
             <Home className="w-5 h-5" />
             <span className="sr-only">Home</span>
@@ -35,14 +37,8 @@ const Navigation: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center">
             <div className="flex gap-4 sm:gap-6 mr-4">
-              <Link href="/writing" className={isActive("/writing")}>
-                Writing
-              </Link>
-              {/* <Link href="/work" className={isActive("/work")}>
-                Work
-              </Link> */}
-              <Link href="/about" className={isActive("/about")}>
-                About
+              <Link href="https://www.linkedin.com/in/eric-l-wang/" className={isActive("/writing")}>
+                Contact
               </Link>
             </div>
             <div className="flex items-center gap-4">
@@ -61,7 +57,7 @@ const Navigation: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Controls */}
           <div className="flex lg:hidden items-center gap-4">
             <button
               onClick={toggleSound}
@@ -87,42 +83,46 @@ const Navigation: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black lg:hidden"
+                className="fixed inset-0 bg-black/50 lg:hidden backdrop-blur-sm"
                 onClick={() => setIsOpen(false)}
                 style={{ zIndex: 40 }}
               />
               <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 w-[90%] max-w-[400px] bg-white dark:bg-[#0F1117] shadow-xl lg:hidden flex flex-col px-6"
-                style={{ zIndex: 50 }}
+                initial={{ y: "-100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "-100%" }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className="fixed top-0 left-0 right-0 bg-white dark:bg-[#0F1117] shadow-xl lg:hidden flex flex-col px-6 pt-24"
+                style={{ zIndex: 45 }}
               >
-                <div className="flex justify-end pt-8">
-                  <Hamburger isOpen={isOpen} toggle={() => setIsOpen(false)} />
-                </div>
-                <div className="flex flex-col space-y-6 pt-16">
+                <div className="flex flex-col space-y-6 pb-8">
                   <Link
                     href="/"
-                    className={isActive("/")}
+                    className={`${isActive("/")} ml-1`}
                     onClick={() => setIsOpen(false)}
                   >
                     Home
                   </Link>
                   <Link
                     href="/writing"
-                    className={isActive("/writing")}
+                    className={`${isActive("/writing")} ml-1`}
                     onClick={() => setIsOpen(false)}
                   >
                     Writing
                   </Link>
                   <Link
                     href="/about"
-                    className={isActive("/about")}
+                    className={`${isActive("/about")} ml-1`}
                     onClick={() => setIsOpen(false)}
                   >
                     About
+                  </Link>
+                  <Link
+                    href="https://www.linkedin.com/in/eric-l-wang/"
+                    className={`${isActive("/")} ml-1`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Contact
                   </Link>
                 </div>
               </motion.div>
