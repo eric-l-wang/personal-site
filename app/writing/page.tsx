@@ -28,21 +28,19 @@ export default function WritingPage() {
     <div className="min-h-screen bg-white dark:bg-[#0F1117]">
       <Navigation />
       <main className="max-w-3xl mx-auto px-4 pt-16 pb-24">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl sm:text-[32px] font-bold text-gray-900 dark:text-white mb-16 font-mono cursor-default">
-            Writing
-          </h1>
-          <div className="space-y-8">
-            {posts.map((post) => (
-              <BlogPost
-                key={post.slug}
-                title={post.title}
-                date={post.date}
-                excerpt={post.excerpt}
-                slug={post.slug}
-              />
-            ))}
-          </div>
+        <h1 className="text-2xl sm:text-[32px] font-bold text-gray-900 dark:text-white mb-16 font-mono cursor-default">
+          Writing
+        </h1>
+        <div className="space-y-8">
+          {posts.map((post) => (
+            <BlogPost
+              key={post.slug}
+              title={post.title}
+              date={post.date}
+              excerpt={post.excerpt}
+              slug={post.slug}
+            />
+          ))}
         </div>
       </main>
     </div>

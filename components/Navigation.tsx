@@ -27,7 +27,7 @@ const Navigation: React.FC = () => {
           <Link
             href="/"
             className={`text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white transition-all cursor-pointer p-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 ${
-              isOpen ? 'opacity-0' : 'opacity-100'
+              isOpen ? "opacity-0" : "opacity-100"
             }`}
           >
             <Home className="w-5 h-5" />
@@ -37,7 +37,10 @@ const Navigation: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center">
             <div className="flex gap-4 sm:gap-6 mr-4">
-              <Link href="https://www.linkedin.com/in/eric-l-wang/" className={isActive("/writing")}>
+              <Link
+                href="https://www.linkedin.com/in/eric-l-wang/"
+                className={isActive("/writing")}
+              >
                 Contact
               </Link>
             </div>

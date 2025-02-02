@@ -62,7 +62,7 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
             <DiscoBall />
           ) : (
             <motion.div
-              className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD]"
+              className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD] shadow-[0_0_30px_rgba(255,215,0,0.3)] dark:shadow-[0_0_30px_rgba(255,244,189,0.2)]"
               animate={{
                 y: [0, -8, 0],
               }}
@@ -163,7 +163,7 @@ const NoteBurst = ({ isActive }: { isActive: boolean }) => {
 };
 
 const PixelTrailDemo: React.FC = () => {
-  const [playClick] = useSound("/Creamy Keyboard Press.mp3", {volume: 3});
+  const [playClick] = useSound("/Creamy Keyboard Press.mp3", { volume: 3 });
   const { isSoundEnabled, isPartyPlaying, toggleParty } = useSoundContext();
 
   const handlePartyClick = () => {
@@ -209,10 +209,6 @@ const PixelTrailDemo: React.FC = () => {
     }, 250);
   };
 
-  const handleResumeClick = () => {
-    document.getElementById("work")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <div className="min-h-[800px] max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
       <SkyVisuals isPartyPlaying={isPartyPlaying} />
@@ -226,32 +222,33 @@ const PixelTrailDemo: React.FC = () => {
         <div className="mt-8 flex flex-wrap justify-center items-center gap-6 relative">
           <Float
             speed={0.7}
-            amplitude={[8, 12, 15]}  // Reduced from [15, 25, 35]
-            rotationRange={[5, 6, 3]}  // Reduced from [10, 12, 5]
+            amplitude={[8, 12, 15]} // Reduced from [15, 25, 35]
+            rotationRange={[5, 6, 3]} // Reduced from [10, 12, 5]
             timeOffset={0}
           >
             <div className="relative hover:scale-105 transition-transform">
-              <motion.button
-                onClick={handleResumeClick}
-                className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.8,
-                  ease: [0.21, 1.02, 0.73, 0.97],
-                  opacity: { duration: 0.4 },
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Work
-              </motion.button>
+              <Link href="/work" passHref legacyBehavior>
+                <motion.button
+                  className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.21, 1.02, 0.73, 0.97],
+                    opacity: { duration: 0.4 },
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Work
+                </motion.button>
+              </Link>
             </div>
           </Float>
           <Float
             speed={0.6}
-            amplitude={[10, 15, 12]}  // Reduced from [20, 30, 25]
-            rotationRange={[4, 7, 3]}  // Reduced from [8, 15, 7]
+            amplitude={[10, 15, 12]} // Reduced from [20, 30, 25]
+            rotationRange={[4, 7, 3]} // Reduced from [8, 15, 7]
             timeOffset={2.1}
           >
             <div className="relative hover:scale-105 transition-transform">
@@ -276,8 +273,8 @@ const PixelTrailDemo: React.FC = () => {
           </Float>
           <Float
             speed={1}
-            amplitude={[10, 15, 12]}  // Reduced from [20, 30, 25]
-            rotationRange={[5, 7, 3]}  // Reduced from [10, 15, 7]
+            amplitude={[10, 15, 12]} // Reduced from [20, 30, 25]
+            rotationRange={[5, 7, 3]} // Reduced from [10, 15, 7]
             timeOffset={0}
           >
             <div className="relative hover:scale-105 transition-transform">
@@ -319,12 +316,12 @@ const PixelTrailDemo: React.FC = () => {
           </Float>
           <Float
             speed={0.8}
-            amplitude={[12, 10, 15]}  // Reduced from [25, 20, 30]
-            rotationRange={[6, 5, 4]}  // Reduced from [12, 10, 8]
+            amplitude={[12, 10, 15]} // Reduced from [25, 20, 30]
+            rotationRange={[6, 5, 4]} // Reduced from [12, 10, 8]
             timeOffset={4.2}
           >
             <div className="relative hover:scale-105 transition-transform">
-            <Link href="/about" passHref legacyBehavior>
+              <Link href="/about" passHref legacyBehavior>
                 <motion.button
                   className="bg-[#ffb59c] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
                   initial={{ opacity: 0, y: 10 }}
@@ -340,7 +337,7 @@ const PixelTrailDemo: React.FC = () => {
                 >
                   About
                 </motion.button>
-</Link      >
+              </Link>
             </div>
           </Float>
         </div>
