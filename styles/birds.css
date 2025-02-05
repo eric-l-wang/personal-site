@@ -1,0 +1,71 @@
+.birds-container {
+  position: absolute;
+  top: 15%;
+  left: -10%;
+  transform: scale(0.6);
+  pointer-events: none;
+}
+
+.bird {
+  position: absolute;
+  width: 30px;
+  height: 8px;
+  animation: fly 15s linear infinite;
+}
+
+.bird::before,
+.bird::after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  transform-origin: center;
+  animation: wings 0.8s ease-in-out infinite;
+}
+
+.bird::before {
+  left: 0;
+}
+
+.bird::after {
+  left: 15px;
+}
+
+.bird:nth-child(2) {
+  top: 20px;
+  animation-delay: -3s;
+}
+.bird:nth-child(3) {
+  top: -20px;
+  animation-delay: -6s;
+}
+.bird:nth-child(4) {
+  top: 40px;
+  animation-delay: -9s;
+}
+
+@keyframes fly {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(40vw) translateY(-20px);
+  }
+  50% {
+    transform: translateX(80vw) translateY(0);
+  }
+  75% {
+    transform: translateX(120vw) translateY(-10px);
+  }
+  100% {
+    transform: translateX(120vw) translateY(0);
+  }
+}
+
+@keyframes wings {
+  50% {
+    transform: rotate(20deg);
+  }
+}

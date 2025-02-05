@@ -8,6 +8,8 @@ import confetti from "canvas-confetti";
 import useSound from "use-sound";
 import { useSound as useSoundContext } from "@/contexts/SoundContext";
 import DiscoBall from "@/components/DiscoBall";
+import HotAirBalloon from "./HotAirBalloon";
+import SimpleBirds from "./SimpleBirds";
 
 const RainDrop = ({ startX, startY }: { startX: number; startY: number }) => {
   return (
@@ -74,6 +76,12 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
             />
           )}
         </div>
+
+        {/* Hot Air Balloon */}
+        <HotAirBalloon />
+
+        {/* Airplane */}
+        <SimpleBirds />
 
         {/* Clouds */}
         <div className="relative">
@@ -210,7 +218,7 @@ const PixelTrailDemo: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[800px] max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
+    <div className="min-h-[600px] pt-48 max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
       <SkyVisuals isPartyPlaying={isPartyPlaying} />
       <div className="flex-grow flex flex-col justify-center -translate-y-20 items-center p-4 relative">
         <h2 className="font-VT323 text-4xl sm:text-5xl md:text-5xl uppercase text-center cursor-default z-20">

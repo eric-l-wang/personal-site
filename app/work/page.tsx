@@ -1,5 +1,5 @@
 import Navigation from "@/components/Navigation";
-import WorkCard from "@/components/WorkCard";
+import { BentoWorkGrid, BentoWorkCard } from "@/components/BentoWorkGrid";
 
 const projects = [
   {
@@ -32,15 +32,15 @@ export default function WorkPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0F1117]">
       <Navigation />
-      <main className="max-w-3xl mx-auto px-4 pt-16 pb-24">
+      <main className="max-w-5xl mx-auto px-4 pt-16 pb-24">
         <h1 className="text-2xl sm:text-[32px] font-bold text-gray-900 dark:text-white mb-16 font-mono cursor-default">
           Work
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <BentoWorkGrid>
           {projects.map((project, index) => (
-            <WorkCard key={project.title} {...project} index={index} />
+            <BentoWorkCard key={project.title} {...project} index={index} />
           ))}
-        </div>
+        </BentoWorkGrid>
       </main>
     </div>
   );
