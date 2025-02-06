@@ -27,12 +27,6 @@ export default function AboutPage() {
               On the note of interests, I love to dance, explore new cities, and
               build/design cool shit in my spare time.
             </p>
-            <p className="font-['Caveat'] text-3xl italic text-gray-600 dark:text-gray-400 text-right w-full pr-4">
-              Drag some of these photos around for fun!
-            </p>
-          </div>
-          <div className="w-full h-[800px] relative">
-            <DragElementsDemo />
           </div>
         </div>
       </main>

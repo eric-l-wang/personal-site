@@ -39,13 +39,13 @@ export default function SimpleBirds() {
 
   // Map progress to the x position.
   // When progress = 0, x is "-80%"; when progress = 1, x is "510%"
-  const xValue = useTransform(progress, (v) => `${-80 + 590 * v}%`);
+  const xValue = useTransform(progress, (v) => `${-70 + 900 * v}%`);
 
   // Map progress to the y position along a sine wave.
   // Changed baseline from 110 to 90 to move the plane higher.
   const yValue = useTransform(
     progress,
-    (v) => `${70 + 70 * Math.sin(2 * Math.PI * v)}%`
+    (v) => `${0 + 70 * Math.sin(2 * Math.PI * v)}%`
   );
 
   // Map progress to opacity:
@@ -73,7 +73,7 @@ export default function SimpleBirds() {
       <motion.svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 512 512"
-        className="w-20 h-20 absolute bottom-1/2 -translate-y-1/2"
+        className="w-16 h-16 absolute bottom-1/2 -translate-y-1/2"
         style={{
           x: xValue,
           y: yValue,

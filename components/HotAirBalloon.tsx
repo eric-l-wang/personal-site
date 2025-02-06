@@ -1,6 +1,13 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+  backOut,
+  backInOut,
+} from "framer-motion";
 import { useEffect } from "react";
 
 const Balloon = ({
@@ -14,7 +21,11 @@ const Balloon = ({
 }) => {
   const progress = useMotionValue(0);
   const yValue = useTransform(progress, (v) => `${100 - 200 * v}%`);
-  const opacityValue = useTransform(progress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
+
+  // Correctly typed easing for scale transform
+  const scaleValue = useTransform(progress, [0, 0.1, 0.9, 1], [0, 1, 1, 0], {
+    ease: backInOut, // Using a predefined Framer Motion easing
+  });
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -37,7 +48,8 @@ const Balloon = ({
       } top-0`}
       style={{
         y: yValue,
-        opacity: opacityValue,
+        scale: scaleValue,
+        transformOrigin: "center bottom",
       }}
     >
       <svg

@@ -13,9 +13,9 @@ const Hamburger: React.FC<HamburgerProps> = ({ isOpen, toggle }) => {
       aria-label="Toggle menu"
     >
       {isOpen ? (
-        <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+        <X className="text-[#0F1117] dark:text-white w-6 h-6" />
       ) : (
-        <Menu className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+        <Menu className="text-[#0F1117] dark:text-white w-6 h-6" />
       )}
     </button>
   );

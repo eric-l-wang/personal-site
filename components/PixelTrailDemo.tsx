@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Float from "@/components/Float";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import useSound from "use-sound";
@@ -55,26 +55,41 @@ const CloudRain = ({ cloudX, cloudY }: { cloudX: number; cloudY: number }) => {
 };
 
 const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
+  const springTransition = {
+    type: "spring",
+    stiffness: 150,
+    damping: 12,
+    mass: 0.5,
+  };
+
   return (
-    <div className="fixed w-full h-32 -z-6 top-40 sm:top-48">
-      <div className="relative max-w-[500px] mx-auto">
+    <div className="fixed w-full h-40 -z-6 top-44 sm:top-52">
+      <div className="relative max-w-[550px] mx-auto pb-24">
         {/* Sun/Moon */}
         <div className="absolute left-[50%] -translate-x-1/2">
-          {isPartyPlaying ? (
-            <DiscoBall />
-          ) : (
-            <motion.div
-              className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD] shadow-[0_0_30px_rgba(255,215,0,0.3)] dark:shadow-[0_0_30px_rgba(255,244,189,0.2)]"
-              animate={{
-                y: [0, -8, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            {isPartyPlaying ? (
+              <DiscoBall key="disco" />
+            ) : (
+              <motion.div
+                key="sun"
+                className="w-16 h-16 rounded-full bg-[#FFD700] dark:bg-[#FFF4BD] shadow-[0_0_35px_rgba(255,215,0,0.3)] dark:shadow-[0_0_35px_rgba(255,244,189,0.2)]"
+                initial={{ scale: 0 }}
+                animate={{
+                  scale: 1,
+                  y: [0, -8, 0],
+                }}
+                transition={{
+                  scale: { ...springTransition, delay: 0.2 },
+                  y: {
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  },
+                }}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Hot Air Balloon */}
@@ -87,13 +102,11 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
         <div className="relative">
           <motion.div
             className="absolute top-10 left-[30%] -translate-x-1/2 opacity-70"
-            animate={{
-              x: [-5, 5, -5],
-            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
+              ...springTransition,
+              delay: 0.4,
             }}
           >
             <div className="w-16 h-8 bg-gray-200 dark:bg-gray-600 rounded-full ml-4" />
@@ -103,13 +116,11 @@ const SkyVisuals = ({ isPartyPlaying }: { isPartyPlaying: boolean }) => {
 
           <motion.div
             className="absolute top-6 left-[53%] -translate-x-1/2 opacity-70"
-            animate={{
-              x: [10, -10, 10],
-            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
+              ...springTransition,
+              delay: 0.6,
             }}
           >
             <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded-full ml-3" />
@@ -217,17 +228,35 @@ const PixelTrailDemo: React.FC = () => {
     }, 250);
   };
 
+  const buttonVariants = {
+    initial: {
+      scale: 0,
+      opacity: 0,
+    },
+    animate: {
+      scale: 1,
+      opacity: 1,
+    },
+  };
+
+  const springTransition = {
+    type: "spring",
+    stiffness: 150,
+    damping: 12,
+    mass: 0.5,
+  };
+
   return (
-    <div className="min-h-[600px] pt-48 max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
+    <div className="min-h-[660px] pt-56 max-h-screen bg-white dark:bg-[#0F1117] text-gray-900 dark:text-white flex flex-col items-center font-azeretMono">
       <SkyVisuals isPartyPlaying={isPartyPlaying} />
-      <div className="flex-grow flex flex-col justify-center -translate-y-20 items-center p-4 relative">
-        <h2 className="font-VT323 text-4xl sm:text-5xl md:text-5xl uppercase text-center cursor-default z-20">
+      <div className="flex-grow flex flex-col justify-center -translate-y-24 items-center p-4 relative">
+        <h2 className="font-VT323 text-5xl sm:text-6xl md:text-6xl uppercase text-center cursor-default z-20">
           Eric Wang
         </h2>
-        <h3 className="pt-0.5 sm:pt-2 text-sm sm:text-base text-center font-bold font-mono cursor-default z-20 pb-12">
+        <h3 className="pt-1 sm:pt-3 text-base sm:text-lg text-center font-bold font-mono cursor-default z-20 pb-14">
           Founder, Engineer, Designer.
         </h3>
-        <div className="mt-8 flex flex-wrap justify-center items-center gap-6 relative">
+        <div className="mt-10 flex flex-wrap justify-center items-center gap-8 relative">
           <Float
             speed={0.7}
             amplitude={[8, 12, 15]} // Reduced from [15, 25, 35]
@@ -238,14 +267,13 @@ const PixelTrailDemo: React.FC = () => {
               <Link href="/work" passHref legacyBehavior>
                 <motion.button
                   className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  variants={buttonVariants}
+                  initial="initial"
+                  animate="animate"
                   transition={{
-                    duration: 0.8,
-                    ease: [0.21, 1.02, 0.73, 0.97],
-                    opacity: { duration: 0.4 },
+                    ...springTransition,
+                    delay: 0.2, // First button
                   }}
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   Work
@@ -263,15 +291,13 @@ const PixelTrailDemo: React.FC = () => {
               <Link href="/writing" passHref legacyBehavior>
                 <motion.button
                   className="bg-[#7fe7d1] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  variants={buttonVariants}
+                  initial="initial"
+                  animate="animate"
                   transition={{
-                    duration: 0.8,
-                    ease: [0.21, 1.02, 0.73, 0.97],
-                    opacity: { duration: 0.4 },
-                    delay: 0.1,
+                    ...springTransition,
+                    delay: 0.4, // Second button
                   }}
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   Writing
@@ -289,14 +315,13 @@ const PixelTrailDemo: React.FC = () => {
               <NoteBurst isActive={isPartyPlaying} />
               <motion.button
                 className="bg-[#0F1117] dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl font-bold relative overflow-hidden"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                variants={buttonVariants}
+                initial="initial"
+                animate="animate"
                 transition={{
-                  duration: 0.8,
-                  ease: [0.21, 1.02, 0.73, 0.97],
-                  opacity: { duration: 0.4 },
+                  ...springTransition,
+                  delay: 0.6, // Third button
                 }}
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePartyClick}
               >
@@ -332,15 +357,13 @@ const PixelTrailDemo: React.FC = () => {
               <Link href="/about" passHref legacyBehavior>
                 <motion.button
                   className="bg-[#ffb59c] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  variants={buttonVariants}
+                  initial="initial"
+                  animate="animate"
                   transition={{
-                    duration: 0.8,
-                    ease: [0.21, 1.02, 0.73, 0.97],
-                    opacity: { duration: 0.4 },
-                    delay: 0.2,
+                    ...springTransition,
+                    delay: 0.8, // Fourth button
                   }}
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   About

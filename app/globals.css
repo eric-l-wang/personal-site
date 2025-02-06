@@ -76,3 +76,23 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Force scrollbar to always show to prevent layout shifts */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+/* Optional: Style the scrollbar to be less obtrusive */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}

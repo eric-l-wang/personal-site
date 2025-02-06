@@ -21,16 +21,16 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="sticky top-0 w-full bg-white lg:backdrop-blur-sm lg:bg-white/80 dark:bg-[#0F1117] lg:dark:bg-[#0F1117]/80 z-50">
-      <div className="max-w-3xl mx-auto px-4 py-4 pt-8">
+    <nav className="sticky top-0 w-full bg-white lg:backdrop-blur-sm lg:bg-white/80 dark:bg-[#0F1117] lg:dark:bg-[#0F1117]/80 z-50 overflow-x-hidden">
+      <div className="max-w-5xl mx-auto px-4 py-4 pt-8">
         <div className="flex justify-between items-center relative z-50">
           <Link
             href="/"
-            className={`text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white transition-all cursor-pointer p-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 ${
+            className={`text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white transition-all cursor-pointer p-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-[110%] ${
               isOpen ? "opacity-0" : "opacity-100"
             }`}
           >
-            <Home className="w-5 h-5" />
+            <Home className="text-[#0F1117] dark:text-white w-5 h-5 scale-[1.1]" />
             <span className="sr-only">Home</span>
           </Link>
 
@@ -39,7 +39,7 @@ const Navigation: React.FC = () => {
             <div className="flex gap-4 sm:gap-6 mr-4">
               <Link
                 href="https://www.linkedin.com/in/eric-l-wang/"
-                className={isActive("/writing")}
+                className={`text-[110%] ${isActive("/writing")}`}
               >
                 Contact
               </Link>
@@ -51,9 +51,9 @@ const Navigation: React.FC = () => {
                 aria-label={isSoundEnabled ? "Mute sound" : "Unmute sound"}
               >
                 {isSoundEnabled ? (
-                  <Volume2 className="w-5 h-5" />
+                  <Volume2 className="text-[#0F1117] dark:text-white w-5 h-5 scale-[1.1]" />
                 ) : (
-                  <VolumeX className="w-5 h-5" />
+                  <VolumeX className="text-[#0F1117] dark:text-white w-5 h-5 scale-[1.1]" />
                 )}
               </button>
               <ThemeToggle />
@@ -68,9 +68,9 @@ const Navigation: React.FC = () => {
               aria-label={isSoundEnabled ? "Mute sound" : "Unmute sound"}
             >
               {isSoundEnabled ? (
-                <Volume2 className="w-6 h-6" />
+                <Volume2 className="text-[#0F1117] dark:text-white w-6 h-6 scale-[1.1]" />
               ) : (
-                <VolumeX className="w-6 h-6" />
+                <VolumeX className="text-[#0F1117] dark:text-white w-6 h-6 scale-[1.1]" />
               )}
             </button>
             <ThemeToggle />
