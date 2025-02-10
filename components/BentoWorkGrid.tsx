@@ -24,7 +24,7 @@ export const BentoWorkGrid = ({ children, className }: BentoWorkGridProps) => {
   return (
     <div
       className={cn(
-        "grid w-full auto-rows-[22rem] grid-cols-1 md:grid-cols-2 gap-6",
+        "grid w-full auto-rows-[22.5rem] grid-cols-1 md:grid-cols-2 gap-6", // increased from 22rem
         className
       )}
     >
@@ -69,14 +69,14 @@ export const BentoWorkCard = ({
             {description}
           </p>
           <div className="flex flex-wrap gap-2 mb-4">
-            {tags.map((tag) => (
+            {/* {tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs font-mono px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                className="text-xs font-mono px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300"
               >
                 {tag}
               </span>
-            ))}
+            ))} */}
           </div>
           {/* <div className="absolute bottom-4 left-4 opacity-0 transform translate-y-4 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
             <Button variant="ghost" size="sm" className="font-mono">
