@@ -78,12 +78,12 @@ export const BentoWorkCard = ({
               </span>
             ))}
           </div>
-          <div className="absolute bottom-4 left-4 opacity-0 transform translate-y-4 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+          {/* <div className="absolute bottom-4 left-4 opacity-0 transform translate-y-4 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
             <Button variant="ghost" size="sm" className="font-mono">
               View Project
               <ArrowRightIcon className="ml-2 h-4 w-4" />
             </Button>
-          </div>
+          </div> */}
         </div>
       </motion.div>
     </Link>
