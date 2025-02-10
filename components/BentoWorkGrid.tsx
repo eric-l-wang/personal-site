@@ -24,7 +24,7 @@ export const BentoWorkGrid = ({ children, className }: BentoWorkGridProps) => {
   return (
     <div
       className={cn(
-        "grid w-full auto-rows-[22.5rem] grid-cols-1 md:grid-cols-2 gap-6", // increased from 22rem
+        "grid w-full grid-cols-1 md:grid-cols-2 gap-6", // increased from 22rem
         className
       )}
     >
