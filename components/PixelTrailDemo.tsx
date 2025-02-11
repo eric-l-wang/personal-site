@@ -264,21 +264,22 @@ const PixelTrailDemo: React.FC = () => {
             timeOffset={0}
           >
             <div className="relative hover:scale-105 transition-transform">
-              <Link href="/work" passHref legacyBehavior>
-                <motion.button
-                  className="bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
-                  variants={buttonVariants}
-                  initial="initial"
-                  animate="animate"
-                  transition={{
-                    ...springTransition,
-                    delay: 0.2, // First button
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Work
-                </motion.button>
-              </Link>
+              <motion.a
+                href="https://cv.ericwang.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
+                variants={buttonVariants}
+                initial="initial"
+                animate="animate"
+                transition={{
+                  ...springTransition,
+                  delay: 0.2, // First button
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Work
+              </motion.a>
             </div>
           </Float>
           <Float
