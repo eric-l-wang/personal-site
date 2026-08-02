@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +19,11 @@ interface BentoWorkCardProps {
   link: string;
   tags: string[];
   index: number;
+  /**
+   * Card artwork. Falls back to the alternating demo clips when omitted, so
+   * existing cards keep their current look.
+   */
+  media?: { type: "image" | "video"; src: string };
 }
 
 export const BentoWorkGrid = ({ children, className }: BentoWorkGridProps) => {
@@ -39,27 +45,46 @@ export const BentoWorkCard = ({
   link,
   tags,
   index,
+  media,
 }: BentoWorkCardProps) => {
+  const isExternal = /^https?:\/\//.test(link);
+  const videoSrc =
+    media?.type === "video"
+      ? media.src
+      : `/work/${index % 2 === 0 ? "demo" : "demo2"}.mp4`;
+
   return (
-    <Link href={link}>
+    <Link
+      href={link}
+      {...(isExternal
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {})}
+    >
       <motion.div
         className="group relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900 hover:scale-[1.02] transition-transform duration-100 cursor-pointer h-full"
         whileHover={{ y: -4 }}
         transition={{ duration: 0.1 }}
       >
         <div className="aspect-video relative">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          >
-            <source
-              src={`/work/${index % 2 === 0 ? "demo" : "demo2"}.mp4`}
-              type="video/mp4"
+          {media?.type === "image" ? (
+            <Image
+              src={media.src}
+              alt={title}
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover object-top"
             />
-          </video>
+          ) : (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src={videoSrc} type="video/mp4" />
+            </video>
+          )}
         </div>
         <div className="p-4">
           <h3 className="font-mono text-lg font-semibold text-gray-900 dark:text-white mb-2">

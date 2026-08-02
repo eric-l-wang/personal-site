@@ -11,6 +11,9 @@ import DiscoBall from "@/components/DiscoBall";
 import HotAirBalloon from "./HotAirBalloon";
 import SimpleBirds from "./SimpleBirds";
 
+// Renders a real <a>, so it keeps the pointer cursor and client-side routing.
+const MotionLink = motion.create(Link);
+
 const RainDrop = ({ startX, startY }: { startX: number; startY: number }) => {
   return (
     <motion.div
@@ -254,7 +257,7 @@ const PixelTrailDemo: React.FC = () => {
           Eric Wang
         </h2>
         <h3 className="pt-1 sm:pt-3 text-base sm:text-lg text-center font-bold font-mono cursor-default z-20 pb-14">
-          Founder, Engineer, Designer.
+          Some stuff about me
         </h3>
         <div className="mt-10 flex flex-wrap justify-center items-center gap-8 relative">
           <Float
@@ -264,10 +267,8 @@ const PixelTrailDemo: React.FC = () => {
             timeOffset={0}
           >
             <div className="relative hover:scale-105 transition-transform">
-              <motion.a
-                href="https://cv.ericwang.app"
-                target="_blank"
-                rel="noopener noreferrer"
+              <MotionLink
+                href="/work"
                 className="inline-block bg-[#ff8a8a] text-gray-900 px-6 py-3 rounded-full font-mono text-lg sm:text-xl"
                 variants={buttonVariants}
                 initial="initial"
@@ -279,7 +280,7 @@ const PixelTrailDemo: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 Work
-              </motion.a>
+              </MotionLink>
             </div>
           </Float>
           <Float
