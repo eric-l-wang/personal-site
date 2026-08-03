@@ -14,10 +14,10 @@ interface BlogPostProps {
 const BlogPost = ({ title, date, excerpt, slug }: BlogPostProps) => {
   const [mounted, setMounted] = useState(false);
   const [hoverColor, setHoverColor] = useState<string | null>(null);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   const colors =
-    theme === "dark"
+    resolvedTheme === "dark"
       ? ["#ff8a8a", "#7fe7d1", "#ffb59c"] // Original colors for dark mode
       : ["#e06666", "#50b3a1", "#e88e70"]; // Darker versions for light mode
 
@@ -28,7 +28,7 @@ const BlogPost = ({ title, date, excerpt, slug }: BlogPostProps) => {
   const titleColor = () => {
     if (!mounted) return "inherit";
     if (hoverColor) return hoverColor;
-    return theme === "dark" ? "white" : "#111827";
+    return resolvedTheme === "dark" ? "white" : "#111827";
   };
 
   return (
