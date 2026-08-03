@@ -13,11 +13,11 @@ export default function BlogPost() {
       <Navigation />
       <article className="max-w-3xl mx-auto px-4 pt-16 pb-24">
         <header className="mb-8">
-          <h1 className="text-2xl sm:text-[32px] text-gray-900 dark:text-white mb-4 font-mono cursor-default font-semibold">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 font-mono cursor-default">
             Building an AI Doctor
           </h1>
           <time
-            className="text-gray-600 dark:text-gray-400 text-sm sm:text-base"
+            className="text-gray-600 dark:text-gray-400 text-sm font-mono"
             suppressHydrationWarning
           >
             Nov 2024
@@ -46,7 +46,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             So, why AI messaging?
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -82,7 +82,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             Selling a dream
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -101,7 +101,7 @@ export default function BlogPost() {
             make recommendations, and diagnoses. Accurately too!
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             "Can I really trust your AI to answer as me?"
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -118,7 +118,7 @@ export default function BlogPost() {
             assuaged the concerns of most customers.
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             Integrating with existing dinosaur tech
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -146,7 +146,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             So easy your grandma can use it
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">

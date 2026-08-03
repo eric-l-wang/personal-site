@@ -65,19 +65,19 @@ const BlogPost = ({ title, date, excerpt, slug }: BlogPostProps) => {
             <div className="p-4">
               <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-2">
                 <h3
-                  className="text-xl font-semibold transition-colors font-mono"
+                  className="text-xl sm:text-2xl font-bold transition-colors font-mono"
                   style={{ color: titleColor() }}
                 >
                   {title}
                 </h3>
                 <time
-                  className="text-gray-600 dark:text-gray-400 text-sm sm:text-base mt-1 sm:mt-0"
+                  className="text-gray-600 dark:text-gray-400 text-sm font-mono mt-1 sm:mt-0"
                   suppressHydrationWarning
                 >
                   {date}
                 </time>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
                 {excerpt}
               </p>
             </div>

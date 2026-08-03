@@ -61,7 +61,7 @@ const essays = [
 ];
 
 const Body = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-gray-800 dark:text-gray-300 text-base leading-relaxed mb-6">
+  <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
     {children}
   </p>
 );
@@ -129,7 +129,7 @@ const gladeCharacters = [
 ];
 
 const Bullet = ({ children }: { children: React.ReactNode }) => (
-  <li className="relative pl-5 text-gray-800 dark:text-gray-300 text-base leading-relaxed before:absolute before:left-0 before:top-[0.6em] before:h-1.5 before:w-1.5 before:rounded-full before:bg-[#ff8a8a]">
+  <li className="relative pl-5 text-gray-800 dark:text-gray-300 text-lg leading-relaxed before:absolute before:left-0 before:top-[0.6em] before:h-1.5 before:w-1.5 before:rounded-full before:bg-[#ff8a8a]">
     {children}
   </li>
 );
@@ -325,7 +325,7 @@ export default function WorkPage() {
           heading="Work"
           description={
             <>
-              A running changelog of what I&apos;ve my work. Feel free to{" "}
+              A running changelog of my work. Feel free to{" "}
               <a
                 href="mailto:ewang036@gmail.com"
                 className="inline-flex items-center px-3 py-1 rounded-full bg-gray-600 dark:bg-white text-white dark:text-[#0F1117] hover:bg-gray-600 dark:hover:bg-gray-100 transition-all hover:-translate-y-0.5 mx-1 align-middle"

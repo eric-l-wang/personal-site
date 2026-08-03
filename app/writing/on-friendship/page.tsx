@@ -8,10 +8,10 @@ export default function BlogPost() {
       <Navigation />
       <article className="max-w-3xl mx-auto px-4 pt-16 pb-24">
         <header className="mb-8">
-          <h1 className="text-2xl sm:text-[32px] text-gray-900 dark:text-white mb-4 font-mono cursor-default font-semibold">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 font-mono cursor-default">
             On Friendship
           </h1>
-          <time className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <time className="text-gray-600 dark:text-gray-400 text-sm font-mono">
             June 2024
           </time>
         </header>
@@ -34,7 +34,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             As adults, friendship is a budgeting game
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -66,7 +66,7 @@ export default function BlogPost() {
             on that matter.
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             So how do we budget better? How do we grow time?
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">

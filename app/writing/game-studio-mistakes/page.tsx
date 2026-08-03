@@ -8,15 +8,15 @@ export default function BlogPost() {
       <Navigation />
       <article className="max-w-3xl mx-auto px-4 pt-16 pb-24">
         <header className="mb-8">
-          <h1 className="text-2xl sm:text-[32px] text-gray-900 dark:text-white mb-4 font-mono cursor-default font-semibold">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 font-mono cursor-default">
             How Not to Run a Game Studio
           </h1>
-          <time className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <time className="text-gray-600 dark:text-gray-400 text-sm font-mono">
             Oct 2024
           </time>
         </header>
         <div className="prose prose-gray dark:prose-invert max-w-none">
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             "Anime Roblox…but for adults!"
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -47,7 +47,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             The Importance of Distribution
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -73,7 +73,7 @@ export default function BlogPost() {
             So, what went wrong then?
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             Game Design is Hard
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -122,7 +122,7 @@ export default function BlogPost() {
             they build.
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             Platform Lock, like real platform lock
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -195,7 +195,7 @@ export default function BlogPost() {
             on the platform was bad for business.
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             The meta isn&apos;t meta-ing
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">
@@ -239,7 +239,7 @@ export default function BlogPost() {
             sure will drop out of the top 30 in no less than a month).
           </p>
 
-          <h2 className="text-xl font-semibold sm:text-xl text-gray-900 dark:text-white mt-12 mb-4 font-mono">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-4 font-mono">
             The future of platforms for game devs
           </h2>
           <p className="text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-6">

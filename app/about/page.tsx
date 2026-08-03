@@ -9,7 +9,7 @@ export default function AboutPage() {
       <Navigation />
       <main className="max-w-3xl mx-auto px-4 pt-16 pb-24">
         <div className="max-w-3xl mx-auto relative">
-          <h1 className="text-2xl sm:text-[32px] font-bold text-gray-900 dark:text-white mb-8 font-mono cursor-default">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-8 font-mono cursor-default">
             About Me
           </h1>
           <div className="space-y-6 text-gray-800 dark:text-gray-300 text-lg leading-relaxed mb-16">
@@ -58,6 +58,13 @@ export default function AboutPage() {
               .
             </p>
           </div>
+          <Image
+            src="/images/about-me.jpg"
+            alt="Eric standing in a sunlit living room, looking up"
+            width={1600}
+            height={1200}
+            className="w-full h-auto rounded-xl"
+          />
         </div>
       </main>
     </div>
