@@ -14,10 +14,14 @@ const Navigation: React.FC = () => {
   const pathname = usePathname();
   const { isSoundEnabled, toggleSound } = useSound();
 
+  // External links never get the active treatment, so they use this directly.
+  const inactiveLink =
+    "text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono";
+
   const isActive = (path: string) => {
     return pathname === path
       ? "text-gray-900 dark:text-white rounded-md p-2 font-mono"
-      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 hover:dark:text-white rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono";
+      : inactiveLink;
   };
 
   return (
@@ -39,7 +43,7 @@ const Navigation: React.FC = () => {
             <div className="flex gap-4 sm:gap-6 mr-4">
               <Link
                 href="https://www.linkedin.com/in/eric-l-wang/"
-                className={`text-[110%] ${isActive("/writing")}`}
+                className={`text-[110%] ${inactiveLink}`}
               >
                 Contact
               </Link>
@@ -107,6 +111,13 @@ const Navigation: React.FC = () => {
                     Home
                   </Link>
                   <Link
+                    href="/work"
+                    className={`${isActive("/work")} ml-1`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Work
+                  </Link>
+                  <Link
                     href="/writing"
                     className={`${isActive("/writing")} ml-1`}
                     onClick={() => setIsOpen(false)}
@@ -122,7 +133,7 @@ const Navigation: React.FC = () => {
                   </Link>
                   <Link
                     href="https://www.linkedin.com/in/eric-l-wang/"
-                    className={`${isActive("/")} ml-1`}
+                    className={`${inactiveLink} ml-1`}
                     onClick={() => setIsOpen(false)}
                   >
                     Contact
