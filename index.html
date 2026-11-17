@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Eric Wang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  /* Layout idea: each painting, redrawn as a 320 x 180 grid of palette colours, fills the screen.
+     A scene only ever changes by cells switching colour; the car is a sprite of the same cells
+     that glides over it. The paintings stand side by side in one long world that scrolls with
+     the car, and a dithered seam of cells blends each into the next.
+     Type sits small along the top edge, over the sky. */
+  :root {
+    color-scheme: light;
+    --sky: #18558d;          /* the palette's deep sky blue, behind everything */
+    --ink: #f2f4e8;          /* the palette's white, for type on the painting */
+    --ink-soft: #c8ecef;     /* the palette's foam colour, for quieter type */
+    --shade: #1e3d41;        /* the palette's darkest teal, as a hard drop shadow */
+    --bloom: #e57e8b;        /* the bush's blossom pink, round whatever has focus */
+    --link: #42a4ce;         /* the sky's brightest blue, under links */
+    --font-display: "DotGothic16", "Courier New", monospace;
+    --font-body: "DotGothic16", "Courier New", monospace;
+    --gutter: clamp(16px, 3.2vw, 44px);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--sky);
+    color: var(--ink);
+    font-family: var(--font-body);
+    overflow: hidden;
+  }
+
+  .stage {
+    position: relative; height: 100%; overflow: hidden; background: var(--sky);
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .world { position: absolute; inset: 0; will-change: transform; }
+  .world > img,
+  .world > canvas {
+    position: absolute; left: 0; top: 0;
+    display: block;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+  }
+  /* until the script sizes things, the still fills the screen like a cover image */
+  .world > img { width: 100%; height: 100%; object-fit: cover; object-position: 47% 100%; }
+  .world > canvas { visibility: hidden; }
+  .stage.live .world > canvas { visibility: visible; }
+  #shadow, #car { will-change: transform; }
+
+  .top {
+    position: absolute; top: var(--gutter); left: var(--gutter); right: var(--gutter);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+    pointer-events: none;
+  }
+  .name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 16px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    line-height: 32px;
+    white-space: nowrap;
+    text-shadow: 2px 2px 0 var(--shade);
+  }
+  .side {
+    display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 16px;
+    text-shadow: 2px 2px 0 var(--shade);
+  }
+  .credit { margin: 0; color: var(--ink-soft); }
+  .credit b { display: block; font-weight: 400; color: var(--ink); }
+  .side { flex: none; }
+
+  /* About: a boxed word beside the name. It opens a game-style dialogue box under the top row:
+     a solid dark panel with a light border and text that types itself out. The panel
+     is solid so the words read the same over the blue sky and the pink one. */
+  .lead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-width: 0; }
+  .about {
+    appearance: none;
+    flex: none;
+    height: 32px; padding: 0 9px 0 11px;
+    font: inherit; font-size: 12px; line-height: 28px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    box-shadow: 2px 2px 0 var(--shade);
+    text-shadow: 2px 2px 0 var(--shade);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .about:hover,
+  .about[aria-expanded="true"] { background: var(--ink); color: var(--shade); text-shadow: none; }
+
+  .talk {
+    position: absolute; left: 0; top: calc(100% + 24px);
+    width: min(100%, 600px);
+    color: var(--ink);
+    background: var(--shade);
+    border: 2px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--shade);
+    pointer-events: auto;
+    animation: talk-open 0.2s steps(5, end) both;
+  }
+  .talk[hidden] { display: none; }
+  @keyframes talk-open {
+    from { clip-path: inset(46% -4px 46% -4px); }
+    to   { clip-path: inset(-20px -4px -4px -4px); }
+  }
+  /* the close button sits on the box's top edge */
+  .shut {
+    appearance: none;
+    position: absolute; top: -15px; right: 14px;
+    width: 28px; height: 28px; margin: 0; padding: 0;
+    color: var(--shade);
+    background: var(--ink);
+    box-shadow: 0 0 0 2px var(--shade);
+    display: grid; place-items: center;
+    border: 0; border-radius: 0;
+    cursor: pointer;
+  }
+  .shut::after { content: ""; position: absolute; inset: -8px; }      /* a bigger target for thumbs */
+  .shut svg { width: 10px; height: 10px; display: block; fill: currentColor; shape-rendering: crispEdges; }
+  .shut:hover { background: var(--bloom); }
+  .say {
+    max-height: calc(100vh - 2 * var(--gutter) - 100px);       /* on a short screen the text scrolls inside the box */
+    max-height: calc(100dvh - 2 * var(--gutter) - 100px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    padding: 22px 20px 18px;
+    font-size: 16px;                        /* the font is drawn on a 16-dot grid: crisp at this size */
+    line-height: 26px;
+    letter-spacing: 0.02em;
+    -webkit-user-select: text; user-select: text;
+    -webkit-touch-callout: default;
+    cursor: default;                        /* an arrow over the words, not a text caret; they can still be selected */
+  }
+  .say p { margin: 0 0 12px; }
+  .say p:last-child { margin-bottom: 0; }
+  .say a { color: inherit; text-decoration: none; }
+  .say a, .say a .ch { cursor: pointer; }
+  .say a .ch { box-shadow: 0 2px 0 var(--link); }
+  .say a:hover .ch { background: var(--ink); color: var(--shade); box-shadow: 0 2px 0 var(--ink); }
+  /* while it types, the whole text is already laid out; characters are only switched on in order */
+  .talk.typing .ch { opacity: 0; }
+  .talk.typing .ch.on { opacity: 1; }
+  .talk.typing a { pointer-events: none; }
+  .about:focus-visible, .shut:focus-visible, .say a:focus-visible { outline: 2px solid var(--bloom); outline-offset: 3px; }
+
+  .hint {
+    position: absolute; left: var(--gutter); right: var(--gutter); bottom: var(--gutter);
+    margin: 0;
+    text-align: right;                      /* clear of the parked car, over open tarmac */
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0 var(--shade);
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .hint.done { opacity: 0; }
+  .hint .touch { display: none; }
+  @media (pointer: coarse) {
+    .hint .keys { display: none; }
+    .hint .touch { display: inline; }
+  }
+
+  @media (min-width: 700px) {
+    .name { font-size: 32px; line-height: 32px; text-shadow: 3px 3px 0 var(--shade); }
+    .side, .hint, .about { font-size: 16px; }
+    .credit b { display: inline; }
+    .say { padding: 24px 24px 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hint { transition: none; }
+    .talk { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <div class="world" id="world">
+    <img id="still" src="px/still.png" alt="Pixel-art versions of four paintings by Hiroshi Nagai. The first: four tall palm trees against a deep blue sky and striped sea, a pink flowering bush, and a white convertible on blue tarmac. Driving right leads to the second: palms over a breaking wave under a pink dusk sky, with a garden in front. Then the third: a hilltop pool terrace above a city of lights, with palms and an airliner in a lilac sky and a highway running along the front. Last, the fourth: a small blue radio station with lit windows beside a road, under tall palms and a pink sunset.">
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="shadow" aria-hidden="true"></canvas>
+    <canvas id="car" aria-hidden="true"></canvas>
+    <canvas id="front" aria-hidden="true"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
+  </div>
+
+  <div class="top">
+    <div class="lead">
+      <h1 class="name">Eric Wang</h1>
+      <button class="about" id="about" type="button" aria-expanded="false" aria-controls="talk">About</button>
+    </div>
+    <div class="talk" id="talk" role="region" aria-label="About Eric" hidden>
+      <button class="shut" id="shut" type="button" aria-label="Close" title="Close">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0h2v2H0zM2 2h2v2H2zM4 4h2v2H4zM6 6h2v2H6zM8 8h2v2H8zM8 0h2v2H8zM6 2h2v2H6zM2 6h2v2H2zM0 8h2v2H0z"/></svg>
+      </button>
+      <div class="say" id="say">
+        <p>Hi! I'm Eric! I'm a founder, product builder, and have most recently been the product lead looking after <a href="https://www.wander.com/" target="_blank" rel="noopener">Wander.com</a>.</p>
+        <p>Before that I founded Kips Health, an AI healthcare startup backed by Y Combinator. I'm interested in startups, interior design, tennis, and of course, Hiroshi Nagai.</p>
+        <p>If you're interested in working together, <a href="mailto:ewang036@gmail.com" title="ewang036@gmail.com">email</a> me or connect with me on <a href="https://www.linkedin.com/in/eric-l-wang/" target="_blank" rel="noopener">LinkedIn</a>.</p>
+      </div>
+    </div>
+    <div class="side">
+      <p class="credit">Artwork by <b>Hiroshi Nagai</b></p>
+    </div>
+  </div>
+
+  <p class="hint" id="hint">
+    <span class="keys">Drive with A / D or &larr; &rarr;</span>
+    <span class="touch">Hold the left or right side to drive</span>
+  </p>
+</main>
+
+<script id="frag" type="x-shader/x-fragment">
+precision highp float;
+
+// The paintings stand side by side in one long world, with a seam between each pair.
+// Each painting brings one 640 x 360 sheet holding four 320 x 180 pictures, already reduced to
+// its palette. The shader only ever copies whole cells from one place to another, so no new
+// colours are created: across a seam, each cell is simply one painting's colour or the next
+// one's, chosen by an ordered-dither pattern.
+uniform sampler2D uSheet1, uSheet2, uSheet3, uSheet4;
+// On a sheet. Art: the scene without its car. Plate: the same with the palms (and the third
+// painting's airliner) lifted out of the sky.
+// Mask: R palms, G foliage, B fronds (sky rows) / open water (below them).
+// Extra: R plants that stand in front of the car's lane, G open sky, B city lights.
+uniform vec2  uOrigin;     // first visible cell, in world cells
+uniform float uRows;       // visible rows
+uniform float uT;
+uniform float uGust;
+uniform vec3  uCar;        // the car: world column of its middle, row of its middle, speed 0..1
+uniform float uPass;       // 0 = everything, 1 = only the plants in front of the car
+
+const vec2  GRID    = vec2(320.0, 180.0);
+const vec2  SHEET   = vec2(640.0, 360.0);
+const vec2  ART     = vec2(0.0, 0.0);
+const vec2  PLATE   = vec2(320.0, 0.0);
+const vec2  MASK    = vec2(0.0, 180.0);
+const vec2  EXTRA   = vec2(320.0, 180.0);
+const float SEAM    = 80.0;    // cells between two paintings where the ground of one gives way to the other
+const float PITCH   = 400.0;   // from the start of one painting to the start of the next
+const float SKYFADE = 72.0;    // the skies start mixing this far inside each painting
+const vec4  PLANE   = vec4(75.0, 12.0, 19.0, 6.0);   // the airliner in the third painting: left, top, width, height
+
+float hash(vec2 p) {
+  p = fract(p * vec2(0.1031, 0.1030));
+  p += dot(p, p.yx + 33.33);
+  return fract((p.x + p.y) * p.x);
+}
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
+float bayer8(vec2 a) { return (bayer2(0.25 * a) * 0.25 + bayer2(0.5 * a)) * 0.25 + bayer2(a); }
+
+// one cell of one of a sheet's four pictures
+vec3 cellOf(sampler2D S, vec2 part, vec2 c) {
+  return texture2D(S, (part + clamp(c, vec2(0.0), GRID - 1.0) + 0.5) / SHEET).rgb;
+}
+
+// A painting's column for a column counted from its own left edge: past either edge the painting
+// carries on by repeating its outermost 8 columns, so there is always something of both
+// neighbours to choose between in a seam.
+float column(float x) { return x < 0.0 ? mod(x, 8.0) : (x < 320.0 ? x : 312.0 + mod(x, 8.0)); }
+
+// One painting's colour at one of its cells, with its own motion. Returns rgb, and in a
+// whether a (swaying) palm covers the cell.
+vec4 shade(sampler2D S, vec2 c, float stir,
+           float skyEnd, vec2 pivot, float foamRow, vec3 foam, vec3 glint, vec3 glintLum, float drift, vec3 night) {
+  vec3 m = cellOf(S, MASK, c);
+
+  // Foliage: waves of wind pass through it, nudging cells one step sideways.
+  vec2 q = c;
+  if (m.g > 0.5) {
+    // (plants the car is brushing past shake harder and faster, which shows where it is behind them)
+    float amp  = 0.42 + 0.62 * uGust + 0.9 * stir;
+    float wave = 0.7 * sin(c.x * 0.17 + c.y * 0.23 - uT * 1.9)
+               + 0.5 * sin(c.x * 0.07 - c.y * 0.29 + uT * 1.1)
+               + 1.3 * stir * sin(c.x * 0.83 + c.y * 0.47 + uT * 11.0);
+    vec2 moved = c - vec2(floor(amp * wave + 0.5), 0.0);
+    if (cellOf(S, MASK, moved).g > 0.5) q = moved;
+  }
+  vec3 col = c.y <= skyEnd ? cellOf(S, PLATE, q) : cellOf(S, ART, q);
+
+  // Palms: each row slides a whole number of cells, more toward the crown; fronds shuffle on top.
+  float h    = clamp((pivot.x - c.y) / pivot.y, 0.0, 1.0);
+  float lean = 0.30 + 0.60 * sin(uT * 0.85 + c.x * 0.014)
+                    + 0.35 * sin(uT * 0.41 + c.x * 0.0084 + 1.3);
+  float sway = floor(1.5 * pow(h, 1.7) * uGust * lean + 0.5);
+  float fw   = c.y < skyEnd ? m.b : 0.0;
+  vec2 flutter = vec2(vnoise(c * 0.18 + vec2(uT * 0.70, 0.0)),
+                      vnoise(c * 0.18 + vec2(9.0, uT * 0.60))) - 0.5;
+  flutter = floor(flutter * 2.7 * fw * (0.35 + 0.8 * uGust) + 0.5);
+  vec2 pc = c - vec2(sway, 0.0) - flutter;
+  float palm = 0.0;
+  if (pc.y >= 0.0 && pc.y <= skyEnd && pc.x >= 0.0 && pc.x < GRID.x && cellOf(S, MASK, pc).r > 0.5) {
+    col = cellOf(S, ART, pc);
+    palm = 1.0;
+  }
+
+  // Water: a broken foam line steps along the shore (where there is one); open water glints.
+  if (c.y > skyEnd && m.b > 0.5) {
+    if (c.y == foamRow) {
+      if (cellOf(S, MASK, vec2(c.x, foamRow - 1.0)).b > 0.5) {
+        float x = c.x - floor(uT * 1.1);
+        float n = vnoise(vec2(x * 0.085, 3.0)) * 0.6 + vnoise(vec2(x * 0.23, 9.0)) * 0.4;
+        n += 0.025 * sin(uT * 0.35 + c.x * 0.04);
+        col = n > 0.30 ? foam : cellOf(S, ART, vec2(c.x, foamRow - 1.0));
+      }
+    } else {
+      float lum = dot(col, vec3(0.3, 0.59, 0.11));
+      float x = c.x - floor(uT * drift);
+      float k = floor(uT * 0.6 + hash(vec2(x, c.y)) * 7.0);
+      if (lum > glintLum.x && lum < glintLum.y && hash(vec2(x + k * 3.0, c.y + k * 5.0)) > glintLum.z) col = glint;
+    }
+  }
+
+  // City lights: now and then one goes out for a few seconds.
+  if (palm < 0.5 && cellOf(S, EXTRA, c).b > 0.5 && dot(col, vec3(0.3, 0.59, 0.11)) > 0.5) {
+    float k = floor(uT * 0.28 + hash(c) * 9.0);
+    if (hash(c * 1.7 + k * vec2(3.0, 5.0)) > 0.93) col = night;
+  }
+  return vec4(col, palm);
+}
+
+// Has the world changed over to the next painting at this cell? x: the column counted from the
+// left edge of the painting being left. Ground, sea and plants change over only within the seam;
+// where both paintings show open sky, the mixing starts earlier and ends later, so the skies run together.
+bool across(float x, bool openSky, float threshold) {
+  float p = openSky ? (x - (320.0 - SKYFADE)) / (SEAM + 2.0 * SKYFADE) : (x - 320.0) / SEAM;
+  return smoothstep(0.0, 1.0, p) > threshold;
+}
+
+void main() {
+  vec2 w = uOrigin + vec2(floor(gl_FragCoord.x), uRows - 1.0 - floor(gl_FragCoord.y));   // world cell
+  float x1 = w.x, x2 = w.x - PITCH, x3 = w.x - 2.0 * PITCH, x4 = w.x - 3.0 * PITCH;
+  float reach = SEAM + SKYFADE;          // how far outside its own columns a painting can still show
+
+  vec2 c1 = vec2(column(x1), w.y);
+  vec2 c2 = vec2(column(x2), w.y);
+  // (from the roof of its house down, the third painting's left edge is flat colour, so there its
+  // very first column is enough: the house and the highway run on to the left as plain bands)
+  vec2 c3 = vec2(x3 < 0.0 && w.y >= 107.0 ? 0.0 : column(x3), w.y);
+  vec2 c4 = vec2(column(x4), w.y);
+
+  float stir = uCar.z * smoothstep(46.0, 10.0, abs(w.x - uCar.x)) * smoothstep(34.0, 12.0, abs(w.y - uCar.y));
+  // only the paintings that can show at this column are worked out
+  vec4 a = vec4(0.0), b = vec4(0.0), c = vec4(0.0), d = vec4(0.0);
+  if (x1 < 320.0 + reach)
+    a = shade(uSheet1, c1, stir, 125.0, vec2(143.75, 121.25), 127.0,
+              vec3(200.0, 236.0, 239.0) / 255.0, vec3(163.0, 208.0, 216.0) / 255.0, vec3(0.42, 0.60, 0.972), 1.6, vec3(0.0));
+  if (x2 >= -reach && x2 < 320.0 + reach)
+    b = shade(uSheet2, c2, stir, 110.0, vec2(133.0, 102.0), -1.0,
+              vec3(238.0, 233.0, 221.0) / 255.0, vec3(238.0, 233.0, 221.0) / 255.0, vec3(0.40, 0.62, 0.976), 1.6, vec3(0.0));
+  if (x3 >= -reach && x3 < 320.0 + reach)
+    c = shade(uSheet3, c3, stir, 75.0, vec2(93.0, 90.0), -1.0,
+              vec3(0.0), vec3(32.0, 176.0, 203.0) / 255.0, vec3(0.25, 0.42, 0.94), 0.5, vec3(26.0, 77.0, 123.0) / 255.0);
+  if (x4 >= -reach)
+    d = shade(uSheet4, c4, stir, 113.0, vec2(131.0, 118.0), -1.0,
+              vec3(0.0), vec3(73.0, 198.0, 246.0) / 255.0, vec3(0.45, 0.56, 0.95), 1.6, vec3(0.0));
+  vec3 e1 = cellOf(uSheet1, EXTRA, c1);
+  vec3 e2 = cellOf(uSheet2, EXTRA, c2);
+  vec3 e3 = cellOf(uSheet3, EXTRA, c3);
+  vec3 e4 = cellOf(uSheet4, EXTRA, c4);
+
+  float threshold = bayer8(w) * 0.98 + 0.01;
+  bool second = across(x1, e1.g > 0.5 && e2.g > 0.5 && a.a < 0.5 && b.a < 0.5, threshold);
+  bool third  = across(x2, e2.g > 0.5 && e3.g > 0.5 && b.a < 0.5 && c.a < 0.5, threshold);
+  bool fourth = across(x3, e3.g > 0.5 && e4.g > 0.5 && c.a < 0.5 && d.a < 0.5, threshold);
+  vec4 here   = fourth ? d : (third ? c : (second ? b : a));
+  float front = fourth ? e4.r : (third ? e3.r : (second ? e2.r : e1.r));
+  if (uPass > 0.5 && front < 0.5) discard;
+  vec3 col = here.rgb;
+
+  // The airliner is lifted out of its place in the third painting and crosses that painting's sky
+  // slowly, behind the palms. It comes into being cell by cell over the seam before, and goes the
+  // same way over the seam after, to come round again a minute and a half later.
+  float fly = floor(mod(uT * 4.0 + 145.0, 420.0));
+  vec2 pl = vec2(x3 - (fly - 70.0), w.y - PLANE.y);                  // the cell within the airliner's box
+  if (pl.x >= 0.0 && pl.x < PLANE.z && pl.y >= 0.0 && pl.y < PLANE.w && here.a < 0.5) {
+    vec3 liner = cellOf(uSheet3, ART, PLANE.xy + pl);
+    if (liner != cellOf(uSheet3, PLATE, PLANE.xy + pl) && min(fly, 419.0 - fly) / 40.0 > bayer8(pl) * 0.98 + 0.01) col = liner;
+  }
+
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var GRID  = [320, 180];       // each painting, in cells
+  var SEAM  = 80;               // cells between two paintings (must match the shader)
+  var PITCH = GRID[0] + SEAM;   // from the start of one painting to the start of the next
+  var FOCAL = [0.47, 0.5];      // what stays in view on a narrow screen before the car has moved
+  var STEP  = 1 / 12;           // the scenery steps 12 times a second, like hand-made pixel animation
+  var PETAL_COLOURS = ["#e16372", "#da4955", "#e57e8b", "#e8cbc3"];
+
+  // The driving car: a side view drawn for this page, one copy per painting in that painting's colours.
+  var SIDE = { bodyW: 72, dy: 6, ground: 18, wheels: [[14, 14], [55, 14]], wheelSize: 9, rollPerFrame: 3.5 };
+  // The standing car: each painting's own car, cut out of it.
+  var PAINTED = { dx: 4, bodyW: 63 };
+  // Car canvas in cells; speeds in cells per second. x is the canvas's left edge in world cells.
+  var CAR = { w: 78, h: 31, start: 104, min: 66, max: 0, accel: 88, brake: 212, coast: 52, top: 80 };
+
+  // One entry per painting, left to right. lane: the row the car canvas's top sits on there
+  // (the same in all of them, so the car keeps to one horizontal line all the way along).
+  // leaves: what flies up over the plants the car is driving behind, so you can follow it.
+  var SCENES = [
+    { dir: "px/",  lane: 144, dust: ["#a3d0d8", "#84b4bd", "#6288a0"] },
+    { dir: "px2/", lane: 144, dust: ["#f1afcd", "#eb96c0", "#db7db4"], leaves: ["#318872", "#eee9dd", "#f1afcd", "#2d6f5f", "#db7db4"] },
+    // the third painting stands above a highway drawn for this page in the colours of its terrace walls
+    { dir: "px3/", lane: 144, dust: ["#d2c3db", "#bfafd7", "#a59cc7"] },
+    // the fourth has a road of its own along the bottom
+    { dir: "px4/", lane: 144, dust: ["#89abbd", "#68657d", "#435980"] }
+  ];
+  var LAST  = SCENES.length - 1;
+  var WORLD = LAST * PITCH + GRID[0];
+  CAR.max = LAST * PITCH + GRID[0] - SIDE.bodyW;      // the far edge of the last painting
+
+  var stage   = document.getElementById("stage");
+  var world   = document.getElementById("world");
+  var still   = document.getElementById("still");
+  var scene   = document.getElementById("scene");
+  var shadowC = document.getElementById("shadow");
+  var carC    = document.getElementById("car");
+  var frontC  = document.getElementById("front");
+  var fxC     = document.getElementById("fx");
+  var hint    = document.getElementById("hint");
+  var aboutB  = document.getElementById("about");
+  var talk    = document.getElementById("talk");
+  var say     = document.getElementById("say");
+  var shut    = document.getElementById("shut");
+
+  var ready   = false;
+  var t = 0, last = 0, pending = 0, raf = 0;
+  var cell = 4, dpr = 1, cols = GRID[0], rows = GRID[1], viewCols = GRID[0], cx0 = 0, cy0 = 0;
+  var cam = 0, camMax = 0, drawnCx0 = -1;
+  var boost = 0;                // extra wind from moving the pointer
+  var gl, uni, fx, frontCtx, carCtx, shadowCtx;
+  var frontTop = null;          // per column of the second painting: the first row its foreground plants cover
+
+  var held = { left: false, right: false };
+  // morph: 0 = standing in the painted pose, 1 = side view. pose / sideFace: which way each of those faces.
+  var car = { x: CAR.start, v: 0, facing: -1, turn: -1, pose: -1, sideFace: -1, travel: 0, driven: false, morph: 0, still: 0, drawn: "" };
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function snap(v) { return Math.round(v * dpr) / dpr; }
+  function smooth(v) { v = clamp(v, 0, 1); return v * v * (3 - 2 * v); }
+
+  // the same ordered-dither pattern the shader uses, so the car changes over cell by cell with the ground
+  function bayer2(x, y) { var v = x / 2 + y * y * 0.75; return v - Math.floor(v); }
+  function bayer8(x, y) {
+    return (bayer2(Math.floor(x / 4), Math.floor(y / 4)) * 0.25 + bayer2(Math.floor(x / 2), Math.floor(y / 2))) * 0.25 + bayer2(x, y);
+  }
+  // in the seam after painting i: has this world cell changed over to painting i + 1 yet?
+  function inNext(i, x, y) { return smooth((x - i * PITCH - GRID[0]) / SEAM) > bayer8(x, y) * 0.98 + 0.01; }
+
+  // where the car is: its middle, which painting that is in, and the lane's height there
+  function carMid() { return car.x + SIDE.bodyW / 2; }
+  function carScene() { return SCENES[clamp(Math.floor((carMid() + SEAM / 2) / PITCH), 0, LAST)]; }
+  function laneTop() {
+    var i = clamp(Math.floor(carMid() / PITCH), 0, LAST - 1);
+    return SCENES[i].lane + (SCENES[i + 1].lane - SCENES[i].lane) * smooth((carMid() - i * PITCH - GRID[0]) / SEAM);
+  }
+  // the seam the car canvas is touching, if any: the index of the painting on its left, else -1
+  function carSeam() {
+    var i = clamp(Math.floor((car.x + CAR.w) / PITCH), 0, LAST - 1);
+    return car.x + CAR.w > i * PITCH + GRID[0] && car.x < (i + 1) * PITCH ? i : -1;
+  }
+
+  /* ---------- fitting: show the window of cells that covers the screen. When a whole number
+     of device pixels per cell is within reach (it is at 1280x720, 1440x900, 1920x1080...),
+     snap to it so every cell is the same size ---------- */
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    dpr = window.devicePixelRatio || 1;
+    cell = Math.max(w / GRID[0], h / GRID[1]);
+    var snapped = Math.ceil(cell * dpr - 1e-6) / dpr;
+    if (snapped / cell <= 1.04) cell = snapped;
+    viewCols = Math.min(GRID[0], Math.ceil(w / cell - 1e-6));
+    rows = Math.min(GRID[1], Math.ceil(h / cell - 1e-6));
+    cols = viewCols + 1;                                  // one spare column for smooth scrolling
+    camMax = WORLD - viewCols;
+    // vertically: centre the scene, but never crop the car's lane off the bottom
+    cy0 = clamp(Math.max(Math.round(FOCAL[1] * GRID[1] - rows / 2), SCENES[0].lane + CAR.h + 2 - rows), 0, GRID[1] - rows);
+    cam = car.driven ? clamp(cam, 0, camMax) : clamp(Math.round(FOCAL[0] * GRID[0] - viewCols / 2), 0, GRID[0] - viewCols);
+
+    world.style.inset = "auto";
+    world.style.left = snap((w - viewCols * cell) / 2) + "px";
+    world.style.top = snap((h - rows * cell) / 2) + "px";
+    world.style.width = cols * cell + "px";
+    world.style.height = rows * cell + "px";
+    [scene, frontC, fxC].forEach(function (cv) {
+      cv.width = cols; cv.height = rows;
+      cv.style.width = cols * cell + "px"; cv.style.height = rows * cell + "px";
+    });
+    [shadowC, carC].forEach(function (cv) {
+      cv.style.width = CAR.w * cell + "px"; cv.style.height = CAR.h * cell + "px";
+    });
+    still.style.objectFit = "fill";
+    still.style.width = GRID[0] * cell + "px";
+    still.style.height = GRID[1] * cell + "px";
+    still.style.top = -cy0 * cell + "px";
+
+    if (gl) gl.viewport(0, 0, cols, rows);
+    drawnCx0 = -1;
+    place();
+  }
+
+  /* ---------- camera and placement. The scene canvas shows whole cells starting at cx0; the
+     leftover fraction of a cell is a CSS shift, so the scrolling and the car both move smoothly ---------- */
+  function place() {
+    cx0 = Math.min(Math.floor(cam), WORLD - cols);
+    world.style.transform = "translate3d(" + snap(-(cam - cx0) * cell) + "px,0,0)";
+    still.style.left = -cx0 * cell + "px";
+    if (ready && cx0 !== drawnCx0) { drawScene(); drawFx(); }
+    var x = (car.x - cx0) * cell, y = (laneTop() - cy0) * cell;
+    var speed = Math.abs(car.v) / CAR.top;
+    var bob = speed * 0.16 * Math.sin(car.travel * 1.3) * cell;          // a little body float at speed
+    shadowC.style.transform = "translate3d(" + snap(x) + "px," + snap(y) + "px,0)";
+    carC.style.transform = "translate3d(" + snap(x) + "px," + snap(y - bob) + "px,0)";
+  }
+
+  /* ---------- wind: slow gusts shared by the palms, the foliage and the petals ---------- */
+  function gustAt(time) {
+    var g = 0.62 + 0.38 * Math.sin(time * 0.21) * Math.sin(time * 0.13 + 1.0)
+                 + 0.12 * Math.sin(time * 0.57 + 2.0);
+    return clamp(g + boost, 0.15, 1.7);
+  }
+
+  /* ---------- the car ---------- */
+  function updateCar(dt) {
+    var input = (held.right ? 1 : 0) - (held.left ? 1 : 0);
+    if (input) {
+      if (!car.driven) { car.driven = true; hint.classList.add("done"); }
+      // pressing against the direction of travel brakes first, then pulls away the other way
+      var rate = car.v * input < 0 ? CAR.brake : CAR.accel;
+      car.v = clamp(car.v + input * rate * dt, -CAR.top, CAR.top);
+      if (car.v * input >= 0 || Math.abs(car.v) < 6) car.facing = input;
+    } else if (car.v) {
+      var slow = CAR.coast * dt;
+      car.v = Math.abs(car.v) <= slow ? 0 : car.v - Math.sign(car.v) * slow;
+    }
+    // ease to a stop at either end of the road (the bush, and the far edge of the last painting)
+    var room = car.v > 0 ? CAR.max - car.x : car.x - CAR.min;
+    var limit = Math.sqrt(Math.max(0, 2 * CAR.brake * room));
+    if (Math.abs(car.v) > limit) car.v = Math.sign(car.v) * limit;
+
+    var before = car.x;
+    car.x = clamp(car.x + car.v * dt, CAR.min, CAR.max);
+    car.travel += car.x - before;
+    if (!input && Math.abs(car.v) < 0.01) {
+      // stopped: settle onto the cell grid so the car lines up with the scene again
+      var home = Math.round(car.x);
+      car.x += (home - car.x) * Math.min(1, dt * 12);
+      if (Math.abs(home - car.x) < 0.01) car.x = home;
+    }
+
+    // Which way things face. The side view turns round with a quick swing, but never mid-morph.
+    if (car.morph <= 0) car.sideFace = car.facing;       // it will come up facing the way we're going
+    if (car.morph < 1) car.turn = car.sideFace;
+    else if (car.turn !== car.facing) car.turn = clamp(car.turn + car.facing * dt / 0.26 * 2, -1, 1);
+
+    // Side view while driving; the painted pose again once it has fully stopped.
+    var moving = input !== 0 || Math.abs(car.v) > 0.01;
+    car.still = moving ? 0 : car.still + dt;
+    var wantSide = car.driven && (moving || car.still < 0.12);
+    var was = car.morph;
+    car.morph = clamp(car.morph + (wantSide ? dt / 0.45 : -dt / 0.5), 0, 1);
+    if (was >= 1 && car.morph < 1) {
+      car.sideFace = car.turn >= 0 ? 1 : -1;             // settle facing the way it was heading
+      car.turn = car.pose = car.sideFace;
+    }
+
+    var top = laneTop();
+    // kick up dust pulling away hard or braking hard
+    var pushing = input && car.v * input >= 0 && Math.abs(car.v) < CAR.top * 0.55;
+    var braking = input && car.v * input < 0 && Math.abs(car.v) > 10;
+    if ((pushing || braking) && Math.random() < dt * 26) {
+      var dir = braking ? Math.sign(car.v) : -input;                     // which way the dust is thrown
+      var rear = car.facing < 0 ? SIDE.wheels[1][0] : SIDE.bodyW - 1 - SIDE.wheels[1][0];
+      // no dust where the wheel is out of sight behind plants (leaves fly there instead, below)
+      var col2 = Math.round(car.x + rear) - PITCH;
+      var hidden = frontTop && col2 >= 0 && col2 < GRID[0] && frontTop[col2] <= top + SIDE.dy + SIDE.ground - 4;
+      if (!hidden) dust.push({
+        x: car.x + rear + dir * rand(1, 3), y: top + SIDE.dy + SIDE.ground + rand(-1, 0.5),
+        vx: dir * rand(8, 20) + car.v * 0.25, vy: -rand(2, 7), age: 0, life: rand(0.35, 0.7),
+        colours: carScene().dust
+      });
+    }
+    // Behind the second painting's foreground plants the car is hidden: leaves and blossom fly up
+    // from the top of whatever it is brushing through, so you can follow where it is.
+    var local = Math.round(carMid() - PITCH);
+    if (Math.abs(car.v) > 12 && frontTop && local > -SIDE.bodyW / 2 && local < GRID[0] + SIDE.bodyW / 2 && Math.random() < dt * 60 * Math.abs(car.v) / CAR.top) {
+      var lx = clamp(local + Math.round(rand(-32, 32)), 0, GRID[0] - 1), edge = frontTop[lx];
+      if (edge < top + SIDE.dy + 11) {
+        var lc = SCENES[1].leaves[(Math.random() * SCENES[1].leaves.length) | 0];
+        dust.push({
+          x: PITCH + lx, y: edge + rand(0, 3), vx: -Math.sign(car.v) * rand(2, 14) + car.v * 0.15,
+          vy: -rand(14, 32), fall: 50, age: 0, life: rand(0.6, 1.1), colours: [lc, lc, lc]
+        });
+      }
+    }
+    // resting petals under the car get thrown up as it passes
+    if (Math.abs(car.v) > 14) {
+      var y0 = top + SIDE.dy + 8;
+      for (var i = 0; i < petals.length; i++) {
+        var p = petals[i];
+        if (p.y >= p.ground && !p.kick && p.x > car.x + 1 && p.x < car.x + SIDE.bodyW - 1 && p.y > y0 && p.y < y0 + 14) {
+          p.kick = rand(9, 15); p.kx = Math.sign(car.v) * rand(5, 14); p.rest = 0;
+        }
+      }
+    }
+
+    // The camera follows the car, a little ahead of it, so the scenery scrolls the other way.
+    if (car.driven) {
+      var want = clamp(carMid() + car.facing * 18 - viewCols / 2, 0, camMax);
+      cam += (want - cam) * (1 - Math.exp(-dt * 3.2));
+      if (Math.abs(want - cam) < 0.002) cam = want;
+    }
+  }
+
+  /* ---------- drawing the car ---------- */
+  function drawCar() {
+    var sc = carScene(), P = sc.sprites;
+    var seam = carSeam(), inSeam = seam >= 0;
+    var frame = ((Math.floor(car.travel / SIDE.rollPerFrame) % 4) + 4) % 4;
+    var key = sc.dir + car.morph.toFixed(3) + ":" + car.turn.toFixed(3) + ":" + car.pose + ":" + car.sideFace + ":" + frame +
+              (inSeam ? ":" + Math.round(car.x) + ":" + Math.round(laneTop()) : "");
+    if (key === car.drawn) return;
+    car.drawn = key;
+    var mid;
+
+    shadowCtx.setTransform(1, 0, 0, 1, 0, 0);
+    shadowCtx.clearRect(0, 0, CAR.w, CAR.h);
+    carCtx.setTransform(1, 0, 0, 1, 0, 0);
+    carCtx.clearRect(0, 0, CAR.w, CAR.h);
+
+    if (car.morph <= 0) {
+      // standing: that painting's own car, mirrored if it stopped heading right
+      mid = PAINTED.dx + PAINTED.bodyW / 2;
+      var ps = car.pose < 0 ? 1 : -1;
+      shadowCtx.drawImage(car.pose < 0 ? P.paintedShadowL : P.paintedShadowR, PAINTED.dx, 0);
+      carCtx.setTransform(ps, 0, 0, 1, mid - mid * ps, 0);
+      carCtx.drawImage(P.painted, PAINTED.dx, 0);
+      return;
+    }
+
+    if (car.morph < 1) {
+      // in between: every cell of one sprite travels to its place in the other
+      drawMorph(shadowCtx, car.pose < 0 ? sc.morph.shadowL : sc.morph.shadowR, car.morph, false, false);
+      drawMorph(carCtx, sc.morph.body, car.morph, car.pose > 0, car.sideFace > 0);
+      return;
+    }
+
+    // side view. turn runs from -1 (nose to the left) to +1 (mirrored, nose to the right)
+    var sx = -Math.sin(car.turn * Math.PI / 2);
+    if (Math.abs(sx) < 0.06) sx = sx < 0 ? -0.06 : 0.06;
+    mid = SIDE.bodyW / 2;
+    shadowCtx.setTransform(Math.abs(sx), 0, 0, 1, mid - mid * Math.abs(sx), SIDE.dy);
+    shadowCtx.drawImage(P.sideShadow, 0, 0);
+    // Crossing a seam, the car takes the next painting's colours cell by cell, in step with the ground.
+    var dithered = inSeam && Math.abs(sx) === 1;
+    carCtx.setTransform(sx, 0, 0, 1, mid - mid * sx, SIDE.dy);
+    carCtx.drawImage(dithered ? SCENES[seam].sprites.side : P.side, 0, 0);
+    if (dithered) {
+      var next = SCENES[seam + 1];
+      var cells = next.sideCells, wx = Math.round(car.x), wy = Math.round(laneTop()) + SIDE.dy;
+      for (var k = 0; k < cells.length; k++) {
+        var q = cells[k], onX = sx > 0 ? q.x : SIDE.bodyW - 1 - q.x;
+        if (inNext(seam, wx + onX, wy + q.y)) carCtx.drawImage(next.sprites.side, q.x, q.y, 1, 1, q.x, q.y, 1, 1);
+      }
+    }
+
+    // wheels: four frames of a turning spoke, stepped by distance rolled
+    if (frame && Math.abs(sx) === 1) {
+      carCtx.setTransform(1, 0, 0, 1, 0, 0);
+      var n = SIDE.wheelSize, half = (n - 1) / 2;
+      SIDE.wheels.forEach(function (wh) {
+        var left = sx > 0 ? wh[0] - half : SIDE.bodyW - 1 - wh[0] - half;
+        carCtx.drawImage(P.wheels, frame * n, 0, n, n, left, SIDE.dy + wh[1] - half, n, n);
+      });
+    }
+  }
+
+  /* ---------- the morph between the standing pose and the side view.
+     Both sprites are lists of cells. Cell k of one is paired with cell k of the other (both read
+     column by column, so neighbours stay neighbours), and each pair is one travelling cell.
+     The change sweeps along the car from nose to tail: ahead of the sweep it is still the old
+     sprite, behind it the new one, and in the band between, cells are in flight, hopping a little
+     and taking their new colour half-way across. ---------- */
+  var SWEEP = 0.56;             // share of the morph spent sweeping; the rest is each cell's own flight
+  var scratch = document.createElement("canvas");
+  function cellsOf(bitmap) {
+    scratch.width = bitmap.width; scratch.height = bitmap.height;
+    var sc = scratch.getContext("2d", { willReadFrequently: true });
+    sc.clearRect(0, 0, scratch.width, scratch.height);
+    sc.drawImage(bitmap, 0, 0);
+    var d = sc.getImageData(0, 0, scratch.width, scratch.height).data, out = [];
+    for (var x = 0; x < scratch.width; x++) {
+      for (var y = 0; y < scratch.height; y++) {
+        var o = (y * scratch.width + x) * 4;
+        if (d[o + 3] > 127) out.push({ x: x, y: y, c: "rgb(" + d[o] + "," + d[o + 1] + "," + d[o + 2] + ")" });
+      }
+    }
+    return out;
+  }
+  function pairUp(a, b, hop) {
+    var n = Math.max(a.length, b.length);
+    var m = { n: n, ax: [], ay: [], bx: [], by: [], ca: [], cb: [], delay: [], hop: [] };
+    for (var k = 0; k < n; k++) {
+      var p = a[Math.floor(k * a.length / n)], q = b[Math.floor(k * b.length / n)];
+      var r1 = Math.abs(Math.sin(k * 12.9898) * 43758.5453) % 1, r2 = Math.abs(Math.sin(k * 78.233) * 12543.123) % 1;
+      m.ax.push(p.x); m.ay.push(p.y); m.bx.push(q.x); m.by.push(q.y); m.ca.push(p.c); m.cb.push(q.c);
+      m.delay.push(SWEEP * (k / n) + 0.04 * r1);
+      m.hop.push(hop * r2);
+    }
+    return m;
+  }
+  function drawMorph(ctx, m, amount, mirrorA, mirrorB) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    for (var k = 0; k < m.n; k++) {
+      var e = smooth((amount - m.delay[k]) / (1 - SWEEP - 0.04));
+      var ax = PAINTED.dx + (mirrorA ? PAINTED.bodyW - 1 - m.ax[k] : m.ax[k]);
+      var bx = mirrorB ? SIDE.bodyW - 1 - m.bx[k] : m.bx[k];
+      var x = ax + (bx - ax) * e;
+      var y = m.ay[k] + (SIDE.dy + m.by[k] - m.ay[k]) * e - m.hop[k] * Math.sin(Math.PI * e);
+      ctx.fillStyle = e < 0.5 ? m.ca[k] : m.cb[k];
+      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+  }
+
+  /* ---------- petals and dust: single cells on the world's grid ---------- */
+  var petals = [], dust = [];
+  var spawnDebt = 0;
+
+  function spawnPetal() {
+    var y = rand(108, 150);
+    petals.push({
+      x: rand(51, 76), y: y,
+      ground: rand(Math.max(y + 11, 158), 175.5),
+      vy: rand(5, 8), drift: rand(1.2, 4),
+      phase: rand(0, 6.28), wob: rand(1.6, 2.6),
+      a: (Math.random() * 2) | 0, b: 2 + ((Math.random() * 2) | 0),
+      rest: 0, restFor: rand(6, 12), kick: 0, kx: 0
+    });
+  }
+
+  function stepPetals(dt, gust) {
+    spawnDebt += dt * (0.22 + 0.5 * gust * gust);
+    while (spawnDebt > 1) { spawnDebt -= 1; if (petals.length < 18) spawnPetal(); }
+    for (var i = petals.length - 1; i >= 0; i--) {
+      var p = petals[i];
+      if (p.kick) continue;               // in the air after the car hit it: handled every frame
+      if (p.y < p.ground) {
+        p.phase += dt * p.wob;
+        p.y = Math.min(p.ground, p.y + p.vy * dt);
+        p.x += (p.drift * gust + Math.sin(p.phase) * 2.2) * dt;
+      } else {
+        p.rest += dt;
+        if (p.rest > p.restFor) petals.splice(i, 1);
+      }
+    }
+  }
+
+  // kicked petals fly at the car's frame rate so they stay smooth next to it
+  function stepKicked(dt) {
+    var any = false;
+    for (var i = 0; i < petals.length; i++) {
+      var p = petals[i];
+      if (!p.kick) continue;
+      any = true;
+      p.phase += dt * 6;
+      p.y -= p.kick * dt; p.x += p.kx * dt;
+      p.kick -= 34 * dt;
+      if (p.kick <= 0) {
+        p.kick = 0;
+        p.ground = Math.min(175.5, Math.max(p.y + 1, p.ground + rand(-1, 2)));
+      }
+    }
+    return any;
+  }
+
+  function stepDust(dt) {
+    for (var i = dust.length - 1; i >= 0; i--) {
+      var d = dust[i];
+      d.age += dt;
+      if (d.age > d.life) { dust.splice(i, 1); continue; }
+      if (d.fall) d.vy += d.fall * dt;      // leaves arc back down; dust just drifts
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      d.vx *= Math.exp(-dt * (d.fall ? 1.5 : 4));
+    }
+  }
+
+  function drawFx() {
+    fx.clearRect(0, 0, cols, rows);
+    var i;
+    for (i = 0; i < dust.length; i++) {
+      var d = dust[i];
+      fx.fillStyle = d.colours[Math.min(2, (d.age / d.life * 3) | 0)];
+      fx.fillRect(Math.floor(d.x) - cx0, Math.floor(d.y) - cy0, 1, 1);
+    }
+    for (i = 0; i < petals.length; i++) {
+      var p = petals[i];
+      var flying = p.kick || p.y < p.ground;
+      // a petal in the air turns over, showing its lighter side every other beat
+      fx.fillStyle = PETAL_COLOURS[flying && Math.sin(p.phase * 2.3) > 0.2 ? p.b : p.a];
+      fx.fillRect(Math.floor(p.x) - cx0, Math.floor(p.y) - cy0, 1, 1);
+    }
+  }
+
+  /* ---------- drawing and the main loop ---------- */
+  function drawScene() {
+    drawnCx0 = cx0;
+    gl.uniform2f(uni.uOrigin, cx0, cy0);
+    gl.uniform1f(uni.uRows, rows);
+    gl.uniform1f(uni.uT, t);
+    gl.uniform1f(uni.uGust, gustAt(t));
+    gl.uniform3f(uni.uCar, carMid(), laneTop() + SIDE.dy + 10, car.morph > 0 ? Math.abs(car.v) / CAR.top : 0);
+    frontCtx.clearRect(0, 0, cols, rows);
+    if (cx0 + cols > GRID[0]) {
+      // first only the plants that stand in front of the lane, copied onto a layer above the car
+      gl.uniform1f(uni.uPass, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      frontCtx.drawImage(scene, 0, 0);
+    }
+    gl.uniform1f(uni.uPass, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  var fxBusy = false;
+  function frame(now) {
+    raf = 0;
+    var dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    // the car, its dust and the camera run every frame
+    updateCar(dt);
+    stepDust(dt);
+    var kicked = stepKicked(dt);
+
+    // the scenery keeps its own slower beat
+    pending += dt;
+    var stepped = pending >= STEP;
+    if (stepped) {
+      t += pending;
+      boost *= Math.exp(-pending * 0.9);
+      stepPetals(pending, gustAt(t));
+      pending = 0;
+      drawnCx0 = -1;                      // have place() redraw the scenery at the new moment
+    }
+    drawCar();
+    place();
+    if (dust.length || kicked || fxBusy) drawFx();
+    fxBusy = dust.length > 0 || kicked;
+    schedule();
+  }
+
+  function schedule() {
+    if (ready && !document.hidden && !raf) {
+      raf = requestAnimationFrame(function (now) { if (!last) last = now; frame(now); });
+    }
+  }
+
+  /* ---------- about: a dialogue box whose text types itself out, the first time only.
+     Every character is its own span and the whole text is laid out from the start, so nothing
+     reflows while it appears. It types faster than anyone reads; a click on the box finishes it. ---------- */
+  var TYPE = { rate: 106.25, lead: 0.16, stop: 0.176 };   // characters a second; the wait while the box opens; the rest after a paragraph
+  var calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var glyphs = [], shown = 0, typed = false, typeRaf = 0, typeLast = 0, typeDebt = 0;
+
+  function split(node) {
+    Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+      if (n.nodeType === 1) { split(n); return; }
+      if (n.nodeType !== 3) return;
+      var frag = document.createDocumentFragment();
+      n.nodeValue.replace(/\s+/g, " ").split("").forEach(function (c) {
+        var s = document.createElement("span");
+        s.className = "ch";
+        s.textContent = c;
+        frag.appendChild(s);
+        glyphs.push({ el: s, wait: 0 });
+      });
+      node.replaceChild(frag, n);
+    });
+  }
+  Array.prototype.forEach.call(say.children, function (p) {
+    split(p);
+    if (glyphs.length) glyphs[glyphs.length - 1].wait = TYPE.stop;
+  });
+
+  function typeFrame(now) {
+    typeRaf = 0;
+    typeDebt += Math.min(0.05, (now - typeLast) / 1000) * TYPE.rate;
+    typeLast = now;
+    while (typeDebt >= 1 && shown < glyphs.length) {
+      var g = glyphs[shown++];
+      g.el.classList.add("on");
+      typeDebt -= 1 + g.wait * TYPE.rate;
+    }
+    if (shown < glyphs.length) typeRaf = requestAnimationFrame(typeFrame);
+    else finishTyping();
+  }
+  function finishTyping() {
+    if (typeRaf) cancelAnimationFrame(typeRaf);
+    typeRaf = 0;
+    typed = true;
+    talk.classList.remove("typing");
+  }
+  function openAbout() {
+    talk.hidden = false;
+    aboutB.setAttribute("aria-expanded", "true");
+    if (typed || calm.matches) { typed = true; return; }
+    talk.classList.add("typing");
+    typeDebt = -TYPE.lead * TYPE.rate;
+    typeRaf = requestAnimationFrame(function (now) { typeLast = now; typeFrame(now); });
+  }
+  function closeAbout(refocus) {
+    if (talk.hidden) return;
+    finishTyping();                         // put away part-way, it is simply all there next time
+    talk.hidden = true;
+    aboutB.setAttribute("aria-expanded", "false");
+    if (refocus) aboutB.focus();
+  }
+  function inAbout(e) { return !!(e.target && e.target.closest && e.target.closest(".about, .talk")); }
+
+  aboutB.addEventListener("click", function () { if (talk.hidden) openAbout(); else closeAbout(false); });
+  shut.addEventListener("click", function () { closeAbout(true); });
+  talk.addEventListener("click", function () { if (!typed) finishTyping(); });
+
+  /* ---------- input ---------- */
+  function keyDir(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return null;
+    var k = e.key;
+    if (k === "ArrowLeft" || k === "a" || k === "A") return "left";
+    if (k === "ArrowRight" || k === "d" || k === "D") return "right";
+    return null;
+  }
+  function release() { held.left = held.right = false; }
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeAbout(true); return; }
+    var d = keyDir(e);
+    if (!d) return;
+    held[d] = true;
+    if (e.key.indexOf("Arrow") === 0) e.preventDefault();
+  });
+  window.addEventListener("keyup", function (e) {
+    var d = keyDir(e);
+    if (d) held[d] = false;
+  });
+  window.addEventListener("blur", release);
+
+  // touch: hold the left or right half of the picture
+  var pointerId = null;
+  stage.addEventListener("pointerdown", function (e) {
+    try { window.focus(); } catch (err) { /* keys still work once the page has focus */ }
+    if (inAbout(e)) return;                 // the About box is not the road; it stays open while you drive
+    if (e.pointerType === "mouse") return;
+    pointerId = e.pointerId;
+    var side = e.clientX < stage.clientWidth / 2 ? "left" : "right";
+    held.left = side === "left"; held.right = side === "right";
+  });
+  function pointerEnd(e) { if (e.pointerId === pointerId) { pointerId = null; release(); } }
+  window.addEventListener("pointerup", pointerEnd);
+  window.addEventListener("pointercancel", pointerEnd);
+  stage.addEventListener("contextmenu", function (e) { if (!inAbout(e)) e.preventDefault(); });
+
+  window.addEventListener("pointermove", function (e) {
+    var speed = Math.hypot(e.movementX || 0, e.movementY || 0);
+    boost = Math.min(0.6, boost + speed * 0.0012);
+  });
+
+  /* ---------- setup ---------- */
+  function loadBlob(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error("Could not load " + url);
+      return r.blob();
+    });
+  }
+  function loadTexture(url) {
+    return loadBlob(url).then(function (blob) {
+      return createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" })
+        .catch(function () { return createImageBitmap(blob); });
+    });
+  }
+  function loadSprite(url) { return loadBlob(url).then(function (blob) { return createImageBitmap(blob); }); }
+
+  function loadScene(sc) {
+    var tex = ["art.png", "plate.png", "mask.png", "extra.png"];
+    var spr = ["car.png", "shadow_l.png", "shadow_r.png", "car_side.png", "shadow_side.png", "wheels.png"];
+    return Promise.all([
+      Promise.all(tex.map(function (f) { return loadTexture(sc.dir + f); })),
+      Promise.all(spr.map(function (f) { return loadSprite(sc.dir + f); }))
+    ]).then(function (got) {
+      sc.bitmaps = got[0];
+      sc.sprites = { painted: got[1][0], paintedShadowL: got[1][1], paintedShadowR: got[1][2],
+                     side: got[1][3], sideShadow: got[1][4], wheels: got[1][5] };
+    });
+  }
+
+  function shader(type, source) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  function start() {
+    gl = scene.getContext("webgl", { antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: "low-power" });
+    fx = fxC.getContext("2d");
+    frontCtx = frontC.getContext("2d");
+    carC.width = shadowC.width = CAR.w;
+    carC.height = shadowC.height = CAR.h;
+    carCtx = carC.getContext("2d");
+    shadowCtx = shadowC.getContext("2d");
+    if (!gl || !fx || !frontCtx || !carCtx || !shadowCtx) throw new Error("WebGL is not available");
+    carCtx.imageSmoothingEnabled = false;
+    shadowCtx.imageSmoothingEnabled = false;
+    gl.clearColor(0, 0, 0, 0);
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER,
+      "attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }"));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, document.getElementById("frag").textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "a");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    uni = {};
+    ["uOrigin", "uRows", "uT", "uGust", "uCar", "uPass"].forEach(function (n) { uni[n] = gl.getUniformLocation(prog, n); });
+
+    // one texture per painting: a sheet with its four pictures side by side and one above the other
+    // (art, plate / mask, extra), each on its own unit for the whole session
+    SCENES.forEach(function (sc, i) {
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, GRID[0] * 2, GRID[1] * 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      sc.bitmaps.forEach(function (bitmap, j) {
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, (j % 2) * GRID[0], (j >> 1) * GRID[1], gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+      });
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.uniform1i(gl.getUniformLocation(prog, "uSheet" + (i + 1)), i);
+      sc.sideCells = cellsOf(sc.sprites.side);
+      sc.morph = {
+        body: pairUp(cellsOf(sc.sprites.painted), sc.sideCells, 1.3),
+        shadowL: pairUp(cellsOf(sc.sprites.paintedShadowL), cellsOf(sc.sprites.sideShadow), 0),
+        shadowR: pairUp(cellsOf(sc.sprites.paintedShadowR), cellsOf(sc.sprites.sideShadow), 0)
+      };
+    });
+
+    // read where the second painting's foreground plants begin, column by column
+    scratch.width = GRID[0]; scratch.height = GRID[1];
+    var sx2 = scratch.getContext("2d", { willReadFrequently: true });
+    sx2.clearRect(0, 0, GRID[0], GRID[1]);
+    sx2.drawImage(SCENES[1].bitmaps[3], 0, 0);
+    var px = sx2.getImageData(0, 0, GRID[0], GRID[1]).data;
+    frontTop = [];
+    for (var cxn = 0; cxn < GRID[0]; cxn++) {
+      var ry = 120;
+      while (ry < GRID[1] && px[(ry * GRID[0] + cxn) * 4] < 128) ry++;
+      frontTop.push(ry);
+    }
+
+    ready = true;
+    resize();
+    drawCar();
+    still.style.visibility = "hidden";      // the canvases now draw everything the still showed
+    stage.classList.add("live");
+    last = 0;
+    schedule();
+  }
+
+  window.addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", function () { last = 0; release(); schedule(); });
+  scene.addEventListener("webglcontextlost", function (e) {
+    e.preventDefault(); ready = false; stage.classList.remove("live");
+    hint.hidden = true;
+  });
+
+  resize();
+  Promise.all(SCENES.map(loadScene)).then(start).catch(function (err) {
+    // The still pixel painting stays on screen; only the motion and the driving are missing.
+    hint.hidden = true;
+    if (window.console) console.warn("Motion is off:", err && err.message);
+  });
+
+})();
+</script>
+</body>
+</html>
