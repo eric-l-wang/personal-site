@@ -61,6 +61,7 @@
     position: absolute; top: var(--gutter); left: var(--gutter); right: var(--gutter);
     display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
     pointer-events: none;
+    z-index: 1;                             /* the About box opens over the hint, not under it */
   }
   .name {
     margin: 0;
@@ -212,9 +213,24 @@
     .hint .keys { display: none; }
     .hint .touch { display: inline; }
   }
+  /* On an upright screen (a phone, a tablet held tall) the car and its shadow fill the bottom edge,
+     so the hint moves up into the open sky on the left, on two short lines. The About box opens
+     over that spot, so the hint steps aside while the box is open. */
+  @media (orientation: portrait) {
+    .hint {
+      top: 37%; bottom: auto; right: auto;
+      max-width: 14.5em;
+      text-align: left;
+      line-height: 1.5;
+      text-wrap: balance;
+    }
+    .hint.under { opacity: 0; transition: none; }
+  }
 
   @media (min-width: 700px) {
-    .name { font-size: 32px; line-height: 32px; text-shadow: 3px 3px 0 var(--shade); }
+    /* at 32px DotGothic16's capitals sit low in their 32px line, flush with the buttons' bottom edge:
+       lift them 2px so they centre on the About and Music boxes */
+    .name { font-size: 32px; line-height: 32px; text-shadow: 3px 3px 0 var(--shade); position: relative; top: -2px; }
     .side, .hint, .about { font-size: 16px; }
     .credit b { display: inline; }
     .say { padding: 24px 24px 22px; }
@@ -262,7 +278,7 @@
 
   <p class="hint" id="hint">
     <span class="keys">Drive with A / D or &larr; &rarr;</span>
-    <span class="touch">Hold the left or right side to drive</span>
+    <span class="touch">Long press on sides of the screen to drive</span>
   </p>
 
   <audio id="tune" preload="none"></audio>
@@ -1104,6 +1120,7 @@ void main() {
   function openAbout() {
     talk.classList.add("opening");          // the wipe; taken off again below so no clip-path is left on the open box
     talk.hidden = false;
+    hint.classList.add("under");
     aboutB.setAttribute("aria-expanded", "true");
     if (typed || calm.matches) { typed = true; return; }
     talk.classList.add("typing");
@@ -1115,6 +1132,7 @@ void main() {
     finishTyping();                         // put away part-way, it is simply all there next time
     talk.hidden = true;
     talk.classList.remove("opening");
+    hint.classList.remove("under");
     aboutB.setAttribute("aria-expanded", "false");
     if (refocus) aboutB.focus();
   }
