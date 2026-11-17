@@ -134,23 +134,16 @@
   .music:disabled,
   .music:disabled:hover { opacity: 0.5; cursor: default; background: transparent; color: var(--ink); text-shadow: 2px 2px 0 var(--shade); --cast: var(--shade); }
 
-  /* The Spotify player: Spotify's own compact embed, in a frame like the About box's, under the
-     credit on the right. It shows while the music is on, and the Music button drives it. Where the
-     About box would run into it, it steps aside while the box is open (it keeps playing). */
+  /* The Spotify player is never seen: the Music button is its only control. It stays laid out
+     inside the window (fully transparent, behind the scene, not clickable) rather than display:none
+     or off-screen, because browsers may not load or may hold back a frame that is not on screen. */
   .dock {
-    position: absolute; right: 0; top: calc(100% + 24px);
-    width: min(100%, 320px);
-    padding: 6px;
-    background: var(--shade);
-    border: 2px solid var(--ink);
-    box-shadow: 0 0 0 2px var(--shade);
-    pointer-events: auto;
+    position: fixed; right: 0; bottom: 0; z-index: -1;
+    width: 300px; height: 80px;
+    opacity: 0;
+    pointer-events: none;
   }
-  .dock iframe { display: block; width: 100%; height: 80px; border: 0; border-radius: 0; }
-  .dock.away { visibility: hidden; }
-  @media (max-width: 1039px) {
-    .top:has(.talk:not([hidden])) .dock { visibility: hidden; }
-  }
+  .dock iframe { display: block; width: 100%; height: 80px; border: 0; }
 
   .talk {
     position: absolute; left: 0; top: calc(100% + 24px);
@@ -290,8 +283,9 @@
     <div class="side">
       <p class="credit">Artwork by <b>Hiroshi Nagai</b></p>
     </div>
-    <div class="dock away" id="dock" role="region" aria-label="Music player"><div id="spotify"></div></div>
   </div>
+
+  <div class="dock" id="dock" aria-hidden="true"><div id="spotify"></div></div>
 
   <p class="hint" id="hint">
     <span class="keys">Drive with A / D or &larr; &rarr;</span>
@@ -1164,8 +1158,7 @@ void main() {
      The Music button is still the control: it starts and stops the embed, and shows what the embed
      is really doing. A browser only lets sound start from a key press, click or tap, so the track
      starts with the visitor's first one, wherever it lands, unless they switched the music off last
-     time. Where the browser still holds the sound back (Safari can), the visible player's own play
-     button always works. While the music is on, the player shows under the credit.
+     time. Spotify's player itself is hidden; the Music button is the only control.
      What Spotify plays depends on the visitor: logged in to Spotify in that browser, the whole track;
      otherwise a 30-second preview (which loops just the same). The embed has no volume control, so
      there is no fade: it simply pauses and resumes.
@@ -1181,7 +1174,6 @@ void main() {
   function remember() { try { window.localStorage.setItem("music", wantMusic ? "on" : "off"); } catch (err) { /* it is just not remembered */ } }
   function showMusic() {
     musicB.setAttribute("aria-pressed", wantMusic && playing ? "true" : "false");
-    dock.classList.toggle("away", !wantMusic || musicGone);
   }
   function playMusic() {
     if (musicGone) return;
@@ -1226,6 +1218,8 @@ void main() {
     api.createController(document.getElementById("spotify"), { uri: MUSIC.uri, width: "100%", height: 80 }, function (c) {
       c.addListener("ready", function () {
         player = c;
+        var frame = dock.querySelector("iframe");
+        if (frame) { frame.tabIndex = -1; frame.title = "Music"; }   // hidden, so kept out of the tab order
         if (musicGone) { musicGone = false; musicB.disabled = false; musicB.title = ""; }   // it came after all
         if (pendingPlay || wantMusic) playMusic();   // where the browser already allows sound, it starts with the page
       });
