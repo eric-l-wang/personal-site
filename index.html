@@ -127,14 +127,30 @@
   @keyframes bars {
     0% { height: 4px; } 17% { height: 12px; } 33% { height: 6px; } 50% { height: 10px; } 67% { height: 2px; } 83% { height: 8px; }
   }
-  /* a tap leaves :hover stuck on, which would read as "on"; and a greyed-out button does not light up.
-     .lost: there is no track file, the button is dimmed and offers to play one from this computer. */
+  /* a tap leaves :hover stuck on, which would read as "on"; and a greyed-out button does not light up. */
   @media (hover: none) {
     .music:hover:not([aria-pressed="true"]) { background: transparent; color: var(--ink); text-shadow: 2px 2px 0 var(--shade); --cast: var(--shade); }
   }
-  .music.lost { opacity: 0.5; }
   .music:disabled,
   .music:disabled:hover { opacity: 0.5; cursor: default; background: transparent; color: var(--ink); text-shadow: 2px 2px 0 var(--shade); --cast: var(--shade); }
+
+  /* The Spotify player: Spotify's own compact embed, in a frame like the About box's, under the
+     credit on the right. It shows while the music is on, and the Music button drives it. Where the
+     About box would run into it, it steps aside while the box is open (it keeps playing). */
+  .dock {
+    position: absolute; right: 0; top: calc(100% + 24px);
+    width: min(100%, 320px);
+    padding: 6px;
+    background: var(--shade);
+    border: 2px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--shade);
+    pointer-events: auto;
+  }
+  .dock iframe { display: block; width: 100%; height: 80px; border: 0; border-radius: 0; }
+  .dock.away { visibility: hidden; }
+  @media (max-width: 1039px) {
+    .top:has(.talk:not([hidden])) .dock { visibility: hidden; }
+  }
 
   .talk {
     position: absolute; left: 0; top: calc(100% + 24px);
@@ -274,6 +290,7 @@
     <div class="side">
       <p class="credit">Artwork by <b>Hiroshi Nagai</b></p>
     </div>
+    <div class="dock away" id="dock" role="region" aria-label="Music player"><div id="spotify"></div></div>
   </div>
 
   <p class="hint" id="hint">
@@ -281,8 +298,6 @@
     <span class="touch">Long press on sides of the screen to drive</span>
   </p>
 
-  <audio id="tune" preload="none"></audio>
-  <input id="pick" type="file" accept="audio/*" hidden>
 </main>
 
 <script id="frag" type="x-shader/x-fragment">
@@ -1136,7 +1151,7 @@ void main() {
     aboutB.setAttribute("aria-expanded", "false");
     if (refocus) aboutB.focus();
   }
-  function inAbout(e) { return !!(e.target && e.target.closest && e.target.closest(".about, .talk")); }
+  function inAbout(e) { return !!(e.target && e.target.closest && e.target.closest(".about, .talk, .dock")); }
 
   aboutB.addEventListener("click", function () { if (talk.hidden) openAbout(); else closeAbout(false); });
   shut.addEventListener("click", function (e) { closeAbout(e.detail === 0); });   // back to About only when closed from the keyboard
@@ -1145,58 +1160,52 @@ void main() {
     talk.addEventListener(type, function (e) { if (e.target === talk) talk.classList.remove("opening"); });
   });
 
-  /* ---------- music: one track on a loop, the file at MUSIC.src. A browser only lets sound start
-     from a key press, click or tap, so the track starts with the visitor's first one, wherever it
-     lands, unless they switched the music off last time. The Music button turns it off and on, it
-     fades in and out, and it stops while the tab is hidden.
-     If the file is not there (the Claude preview, or a deploy without it) the button is dimmed and a
-     click on it offers a file picker instead: the chosen audio file is played straight from that
-     computer for that visit, and is not uploaded or kept. That is only a way to try a track out.
-     start and end are seconds into the file: it plays from start, and on reaching end (or the end
-     of the file, if end is 0) it goes back to start. They belong to this recording (3:06), whose
-     sound dies away by 184.5 s with silence after; for another track, set them again. ---------- */
-  var MUSIC = { src: "audio/track.mp3", start: 0, end: 184.5, volume: 0.6, fade: 0.9 };   // volume from 0 to 1; fade in seconds
+  /* ---------- music: one Spotify track on a loop, played by Spotify's own embed (the IFrame API).
+     The Music button is still the control: it starts and stops the embed, and shows what the embed
+     is really doing. A browser only lets sound start from a key press, click or tap, so the track
+     starts with the visitor's first one, wherever it lands, unless they switched the music off last
+     time. Where the browser still holds the sound back (Safari can), the visible player's own play
+     button always works. While the music is on, the player shows under the credit.
+     What Spotify plays depends on the visitor: logged in to Spotify in that browser, the whole track;
+     otherwise a 30-second preview (which loops just the same). The embed has no volume control, so
+     there is no fade: it simply pauses and resumes.
+     To change the track, set uri (Share > Copy link on Spotify gives open.spotify.com/track/ID). ---------- */
+  var MUSIC = { uri: "spotify:track:0JUWF44gfMszGNhjCF7Ufs", api: "https://open.spotify.com/embed/iframe-api/v1" };
   var musicB = document.getElementById("music");
-  var tune   = document.getElementById("tune");
-  var pick   = document.getElementById("pick");
-  var wantMusic = true, musicStarted = false, musicGone = false, musicHeld = false, fadeRaf = 0;
-  var musicLost = false, musicLocal = false;    // no file at MUSIC.src; playing one picked from this computer
+  var dock   = document.getElementById("dock");
+  var player = null;                        // Spotify's controller, once its embed is ready
+  var wantMusic = true, musicStarted = false, musicGone = false, musicHeld = false;
+  var playing = false, pendingPlay = false, lastPos = 0, lastDur = 0;
   try { wantMusic = window.localStorage.getItem("music") !== "off"; } catch (err) { /* no storage: on, as for a first visit */ }
 
-  function showMusic() { musicB.setAttribute("aria-pressed", wantMusic && !tune.paused ? "true" : "false"); }
-  function fadeMusic(to, then) {
-    if (fadeRaf) cancelAnimationFrame(fadeRaf);
-    var from = tune.volume, began = 0;
-    fadeRaf = requestAnimationFrame(function step(now) {
-      if (!began) began = now;
-      var k = Math.min(1, (now - began) / (MUSIC.fade * 1000));
-      tune.volume = Math.max(0, Math.min(1, from + (to - from) * k));
-      if (k < 1) { fadeRaf = requestAnimationFrame(step); return; }
-      fadeRaf = 0;
-      if (then) then();
-    });
+  function remember() { try { window.localStorage.setItem("music", wantMusic ? "on" : "off"); } catch (err) { /* it is just not remembered */ } }
+  function showMusic() {
+    musicB.setAttribute("aria-pressed", wantMusic && playing ? "true" : "false");
+    dock.classList.toggle("away", !wantMusic || musicGone);
   }
   function playMusic() {
     if (musicGone) return;
-    var started = function () { musicStarted = true; if (wantMusic) fadeMusic(MUSIC.volume); else tune.pause(); };
-    var p;
-    try { p = tune.play(); } catch (err) { return; }
-    if (p && p.then) p.then(started, function () { /* not allowed yet: the next key press, click or tap tries again */ });
-    else started();
+    if (!player) { pendingPlay = true; return; }   // it starts as soon as the embed is ready
+    pendingPlay = false;
+    try { if (musicStarted) player.resume(); else player.play(); } catch (err) { /* the next key press, click or tap tries again */ }
   }
-  function stopMusic() { fadeMusic(0, function () { tune.pause(); }); }
-  function rewindMusic() { try { tune.currentTime = MUSIC.start; } catch (err) { /* nothing to seek in yet */ } }
+  function stopMusic() { pendingPlay = false; if (player && playing) { try { player.pause(); } catch (err) { /* already stopped */ } } }
+  function giveUp(why) {
+    musicGone = true;
+    musicB.disabled = true;
+    musicB.title = why;
+    showMusic();
+  }
 
   musicB.addEventListener("click", function () {
-    if (musicLost) { pick.click(); return; }
-    wantMusic = !(wantMusic && !tune.paused);
-    try { window.localStorage.setItem("music", wantMusic ? "on" : "off"); } catch (err) { /* it is just not remembered */ }
+    wantMusic = !(wantMusic && playing);
+    remember();
     if (wantMusic) playMusic(); else stopMusic();
     showMusic();
   });
   function firstGesture(e) {
-    if (musicStarted || !wantMusic || musicGone || !tune.paused) return;
-    if (e.target && e.target.closest && e.target.closest("#music")) return;   // the button speaks for itself
+    if (musicStarted || !wantMusic || musicGone || playing) return;
+    if (e.target && e.target.closest && e.target.closest("#music, .dock")) return;   // those speak for themselves
     playMusic();
   }
   ["keydown", "pointerdown", "pointerup", "touchend", "click"].forEach(function (type) {
@@ -1204,54 +1213,56 @@ void main() {
   });
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
-      if (tune.paused) return;
-      if (fadeRaf) cancelAnimationFrame(fadeRaf);
-      fadeRaf = 0;
+      if (!playing) return;
       musicHeld = wantMusic;                // picked up again when the tab comes back
-      tune.pause();
-      tune.volume = 0;
+      stopMusic();
     } else if (musicHeld) {
       musicHeld = false;
       if (wantMusic) playMusic();
     }
   });
-  tune.addEventListener("loadedmetadata", rewindMusic);
-  tune.addEventListener("timeupdate", function () {      // a few times a second: close enough, end sits in silence
-    if (MUSIC.end && tune.currentTime >= MUSIC.end && !tune.seeking) rewindMusic();
-  });
-  tune.addEventListener("ended", function () {           // the file ran out before end, or end is 0
-    rewindMusic();
-    if (!wantMusic) return;
-    if (document.hidden) musicHeld = true; else playMusic();
-  });
-  tune.addEventListener("play", showMusic);
-  tune.addEventListener("pause", function () { if (!tune.ended) showMusic(); });
-  tune.addEventListener("error", function () {
-    musicGone = true;
-    if (!musicLocal && tune.error && tune.error.code === 4) {      // nothing playable at MUSIC.src
-      musicLost = true;
-      musicB.classList.add("lost");
-      musicB.title = "No track at " + MUSIC.src + ". Click to play one from this computer.";
-    } else {
-      musicB.disabled = true;
-      musicB.title = "The track could not be played";
-    }
-    showMusic();
-  });
-  pick.addEventListener("change", function () {
-    var file = pick.files && pick.files[0];
-    if (!file) return;
-    musicLost = musicGone = musicStarted = false;
-    musicLocal = wantMusic = true;
-    musicB.classList.remove("lost");
-    musicB.title = "";
-    tune.src = URL.createObjectURL(file);
-    playMusic();                            // if the browser wants a fresh click first, Music or the next key press starts it
-  });
-  tune.volume = 0;
-  tune.preload = wantMusic ? "metadata" : "none";
-  tune.src = MUSIC.src;
-  if (wantMusic) playMusic();               // where the browser already allows sound, it starts with the page
+
+  window.onSpotifyIframeApiReady = function (api) {
+    api.createController(document.getElementById("spotify"), { uri: MUSIC.uri, width: "100%", height: 80 }, function (c) {
+      c.addListener("ready", function () {
+        player = c;
+        if (musicGone) { musicGone = false; musicB.disabled = false; musicB.title = ""; }   // it came after all
+        if (pendingPlay || wantMusic) playMusic();   // where the browser already allows sound, it starts with the page
+      });
+      c.addListener("playback_update", function (e) {
+        var d = e && e.data;
+        if (!d) return;
+        var was = playing;
+        playing = !d.isPaused;
+        if (playing) {
+          musicStarted = true;
+          if (!wantMusic) { wantMusic = true; remember(); }   // started from the player itself
+        }
+        // The end of the track (or of the preview): Spotify stops there, so go round again.
+        var ended = was && !playing && lastDur > 0 && (d.position === 0 || d.position >= d.duration - 1200) && lastPos >= lastDur - 2500;
+        if (ended && wantMusic && !document.hidden) {
+          try { c.seek(0); c.resume(); } catch (err) { /* the next key press starts it */ }
+          playing = true;
+        } else if (was && !playing && !ended && !document.hidden && !musicHeld && musicStarted) {
+          // paused from the player itself: that counts as switching the music off
+          if (!pendingPlay) { wantMusic = false; remember(); }
+        }
+        lastPos = d.position || 0;
+        lastDur = d.duration || lastDur;
+        showMusic();
+      });
+    });
+  };
+  (function () {
+    var s = document.createElement("script");
+    s.src = MUSIC.api;
+    s.async = true;
+    s.onerror = function () { giveUp("The Spotify player could not load here"); };
+    document.head.appendChild(s);
+    // if nothing has come of it after a while (blocked without an error), stop offering it
+    setTimeout(function () { if (!player) giveUp("The Spotify player could not load here"); }, 15000);
+  })();
+  showMusic();
 
   // A button pressed with the mouse or a finger lets go of focus, so the drive keys pressed next
   // don't light a focus ring on it. Pressed from the keyboard (detail 0) it keeps focus as usual.
