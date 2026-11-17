@@ -1153,9 +1153,10 @@ void main() {
      click on it offers a file picker instead: the chosen audio file is played straight from that
      computer for that visit, and is not uploaded or kept. That is only a way to try a track out.
      start and end are seconds into the file: it plays from start, and on reaching end (or the end
-     of the file, if end is 0) it goes back to start. They belong to this recording (3:06), whose
-     sound dies away by 184.5 s with silence after; for another track, set them again. ---------- */
-  var MUSIC = { src: "audio/track.mp3", start: 0, end: 184.5, volume: 0.6, fade: 0.9 };   // volume from 0 to 1; fade in seconds
+     of the file, if end is 0) it goes back to start. They belong to this recording (Eric's cover,
+     5:46), which is silent for its first 2.06 s and whose sound ends at 342.9 s; for another track,
+     set them again. ---------- */
+  var MUSIC = { src: "audio/track.mp3", start: 2.0, end: 343.0, volume: 0.6, fade: 0.9 };   // volume from 0 to 1; fade in seconds
   var musicB = document.getElementById("music");
   var tune   = document.getElementById("tune");
   var pick   = document.getElementById("pick");
